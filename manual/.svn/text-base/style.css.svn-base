@@ -1,0 +1,107 @@
+
+body {
+    color: black;
+    font-size: 10pt;
+    font-family: verdana, arial, helvetica, Sans-Serif;
+}
+
+table {
+    font-size: 10pt;
+}
+
+h1 {
+    font-family: verdana, sans-serif; 
+    border-top: solid 2pt;
+    border-bottom: solid 2pt;
+    border-color: #AAAADD;
+    padding: 3pt;
+    margin-top: 10;
+    margin-right: 0pt;
+    margin-left: 0pt;
+    color: darkblue;
+    background-color: #EEEEFF
+}
+
+h2, h3, h4, h5, h6 {
+    font-family: verdana, arial, helvetica, Sans-Serif;
+}
+
+h2 {
+    font-weight: bold;
+    border-bottom: solid thin;
+    border-left: solid 20pt;
+    border-color: #AAAADD;
+    padding: 1pt;
+    padding-left:20pt;
+    margin-left:5pt;
+    margin-right:0pt;
+    color: black;
+    font-weight: bold;
+    background-color: #EEEEFF
+}
+
+h3 { 
+    margin-top: 20pt;
+    margin-left: 10pt;
+    color: black;
+    font-weight: bold;
+    text-decoration: underline;
+}
+
+div.header p.status { text-align: right; }
+div.header p.last-modified { text-align: left; }
+
+dt {
+    font-weight: bold;
+    margin-top: 2ex;
+    margin-left: 1em;
+}
+
+pre {
+    padding: 10pt;
+    margin: 10pt;
+    border: #646464 1px solid;
+    background-color: #f5f5f5;
+    color:darkblue;
+    font-family: monospace;
+}
+
+p {
+   padding-left: 10pt;
+   padding-right: 10pt;
+}
+
+span.download {
+    font-weight: normal;
+    color: blue;
+    background: #EEEEEE;
+}
+
+.path {
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+}
+
+.navi {
+    text-align: right;
+}
+
+th { 
+    border-color: AAAADD;
+    background-color: #ddeedd; 
+    background-color: #EEEEFF
+}
+.center{
+	text-align: center;
+}
+
+.left{
+	text-align: left;
+  padding: 10pt;
+}
+
+.right{
+	text-align: right;
+  padding: 10pt;
+}
+
+

@@ -1,0 +1,447 @@
+<html>
+  <head>
+  <meta http-equiv="Content-Type" content="text/html; charset=euc-jp">
+  <title>ロイディ Ver.3.09 マニュアル --- SSB </title>
+  <link href="./style.css" type="text/css" rel="stylesheet" />  
+  </head>
+<body>
+
+<p>
+<a href="./index.html">[戻る]</a>
+<a href="http://www.rogiken.org">[ロ技研のトップ]</a>
+<a href="http://www.rogiken.org/cgi-bin/ssrbbs.cgi">[ロ技研掲示板]</a>
+
+<h1>ロイディ Ver.3.09 マニュアル</h1>
+
+
+<h2>目次</h2>
+
+<ul type=circle>
+	<li> <a href="#version_notice">バージョンアップの仕方</a> </li>
+	<li> <a href="#needed">必要なもの</a> </li>
+	<li> <a href="#usage_irc">IRC版の使い方</a> </li>
+	<li> <a href="#setting">設定</a> </li>
+	<li> <a href="#command">コマンド</a> </li>
+	<li> <a href="#edit_log">ログを追加/編集する</a> </li>
+	<li> <a href="#add_word">単語を追加する</a> </li>
+	<li> <a href="#fast_start">ロイディを素早く起動する</a> </li>
+	<li> <a href="#teacher_mode">中の人モード</a> </li>
+	<li> <a href="#regex">正規表現について</a> </li>
+	<li> <a href="#kcode">出力文字コードを変える</a> </li>
+	<li> <a href="#files">ファイル一覧</a> </li>
+	<li> <a href="#licence">ライセンス</a> </li>
+	<li> <a href="#distributor">配布者</a> </li>
+</ul>
+
+<p>
+Windowsの人は「<a href="reudywin.html">Windowsでの準備から実行まで</a>」も併せてどうぞ。
+</p>
+
+<h2><a name="version_notice">バージョンアップの仕方</a><font color="red">（重要）</font></h2>
+
+<p>
+以前のバージョンからバージョンアップする場合は、 <a href="http://rogiken.org/SSB/reudy309up.zip">reudy309up.zip</a> を解凍して、出てきたファイルを、以前のバージョンのファイルに上書きコピーしてください。
+</p>
+
+<p>
+Ver.3.04.1以前からバージョンアップする時には、自動でバックアップが取られるはずです。が、心配な人は <b>public ディレクトリを手動でバックアップ</b>しておきましょう。
+</p>
+
+<p>
+まだ安定してないので、色々仕様が変わってすいません（汗）。当てはまる（●が付いている）注意点をよく読んでください。
+</p>
+
+<p>
+<table border="1">
+<tr><th colspan="5">以前のバージョン</th><th rowspan="2">注意点</th></tr>
+<tr><th>3.01以下</th><th>3.02</th><th>3.03</th><th>3.04.x</th><th>3.05〜</th></tr>
+<tr><td align="center"></td><td align="center">●</td><td align="center">●</td><td align="center">●</td><td align="center"></td><td>ログを手動で追加したい時は、 public/log.txt に直接追加すればいいようになりました。 <b>add_log.rb を使う必要は有りません</b>。また、 public/log.txt を編集した時に、 public/setting.txt に remake_word_to_message_list を指定する必要も無くなりました。「<a href="#edit_log">ログを追加/編集する</a>」参照。</td></tr>
+<tr><td align="center">●</td><td align="center">●</td><td align="center">●</td><td align="center">●</td><td align="center"></td><td>Ruby/GDBM を使うようになりました。無くても動きますが、メモリ消費が激しくなります。「<a href="#needed">必要なもの</a>」参照。</td></tr>
+<tr><td align="center">●</td><td align="center">●</td><td align="center">●</td><td align="center">●</td><td align="center"></td><td>ログの中で、 <b>&lt; &gt; &amp;</b> を <b>&amp;lt; &amp;gt; &amp;amp;</b> と書く必要は無くなりました。 今までのログの中の <b>&amp;lt; &amp;gt; &amp;amp;</b> は、Ver.3.05以降での最初の起動時に、自動で <b>&lt; &gt; &amp;</b> に変換されます。</td></tr>
+<tr><td align="center">●</td><td align="center">●</td><td align="center">●</td><td align="center">●</td><td align="center"></td><td>public/words.txt のフォーマットが変わりました。Ver.3.05以降での最初の起動時に、自動的にフォーマットが変更されます。「<a href="#add_word">単語を追加する</a>」参照。</td></tr>
+<tr><td align="center">●</td><td align="center">●</td><td align="center">●</td><td align="center"></td><td align="center"></td><td>Ruby 1.8.1で動作確認するようになりました。Ruby 1.7以下では動かないかもしれません。</td></tr>
+<tr><td align="center">●</td><td align="center"></td><td align="center"></td><td align="center"></td><td align="center"></td><td>public/setting.txt の必須項目に nicks が追加されました。「<a href="#setting">設定</a>」参照。</td></tr>
+</table>
+</p>
+
+<h2><a name="needed">必要なもの</a></h2>
+
+<ul type=circle>
+	<li> <a href="http://ruby-lang.org/ja/">Ruby</a> 1.8.x。必須。<b>Ruby 1.9.xでは動作しません。</b>Windowsでのインストール方法は<a href="reudywin.html">こちら</a>。 </li>
+	<li> Ruby/GDBM。強く推奨。無いとメモリを大量消費します。<sup><a href="#1"><b>*1</b></a></sup><sup><a href="#2"><b>*2</b></a></sup>Windowsでのインストール方法は<a href="reudywin.html">こちら</a>。 </li>
+	<li> それなりのメモリ。<sup><a href="#1"><b>*1</b></a></sup> </li>
+	<li> <a href="http://rogiken.org/SSB/reudysource.html">ロイディのソース</a>。 </li>
+</ul>
+
+<p>
+<small><a name="1"><b>*1</b></a>　ログ約10万行（約4MB）、単語約1万語の場合、GDBM有りなら約10MB、GDBM無しなら約90MB消費。</small><br>
+<small><a name="2"><b>*2</b></a>　mingw版/mswin32版のRubyでは、Ruby/GDBMが無いとエラーダイアログが出ます。Ruby/GDBMを入れるか、Rubyのディレクトリの中から gdbm.so を探して削除してください。</small>
+</p>
+
+<h2><a name="usage_irc">IRC版の使い方</a></h2>
+
+<p>
+ここではIRCでロイディを動かす方法を説明します。
+</p>
+
+<p>
+まず、 public/setting.txt を編集します。 host 、 port にIRCサーバのホスト名とポート番号を、 channel と info_channel にロイディを動かしたいチャンネルの名前を指定します。 public/setting.txt の各項目についての詳細は「<a href="#setting">設定</a>」を見てください。
+</p>
+
+<p>
+設定が終わったら、ターミナル（やコマンドプロンプト）で
+</p>
+
+<p>
+<tt>&nbsp;&nbsp;&nbsp;&nbsp;ruby irc_reudy.rb public</tt>
+</p>
+
+<p>
+と入力してください。<sup><a href="#5"><b>*5</b></a></sup>
+</p>
+
+<p>
+<tt>
+  &nbsp;&nbsp;&nbsp;&nbsp;ログロード中...<br>
+  &nbsp;&nbsp;&nbsp;&nbsp;単語ロード中...<br>
+  &nbsp;&nbsp;&nbsp;&nbsp;接続開始...<br>
+</tt>
+</p>
+
+<p>
+となれば、成功です。 public/setting.txt で指定したチャンネルにLimeChatやChocoaなどのIRCクライアントでアクセスして、会話をお楽しみください。といっても、最初のうちは全然まともにしゃべれませんが…。
+</p>
+
+<p>
+ロイディを終了するには、ターミナルでCtrl+Cを押すか、IRC上で「ロイディ、終了しなさい」と発言してください。
+</p>
+
+<p>
+コマンドで指定した public というのは、 settng.txt とかを含むディレクトリ名です。 public 以外のディレクトリを作って、複数の設定/記憶を使い分ける事ができます。
+</p>
+
+<p>
+<small>
+  <a name="5"><b>*5</b></a>　irc_reudy.rb を含むディレクトリに移動（cd）して実行しないとエラーになります。
+</small>
+</p>
+
+<h2><a name="setting">設定</a></h2>
+
+<p>
+public/setting.txt には、各行に「項目名」と「値」を半角スペース（or タブ）で区切って書きます。文字コードは<b>EUC</b>にしてください。
+</p>
+
+<p>
+<font color="red">★</font>の項目は必ず設定してください。それ以外はそのままでもとりあえず動きます。
+</p>
+
+<p>
+<h3>IRC専用の設定項目</h3>
+</p>
+
+<p>
+<table border="1">
+<tr><th>項目名</th><th>意味</th><th>値の例</th></tr>
+<tr valign="top"><td>host<font color="red">★</font></td><td>IRCサーバ名。</td><td>irc.fujisawa.wide.ad.jp</td></tr>
+<tr valign="top"><td>port<font color="red">★</font></td><td>IRCサーバのポート。</td><td>6667</td></tr>
+<tr valign="top"><td><a name="encoding">encoding</a><font color="red">★</font></td><td>IRCサーバの文字コード。LimeChatで同じサーバにログインするときに、サーバのプロパティの[文字コード]にISO-2022-JP(デフォルト)を指定している場合は JIS 、UTF-8を指定している場合は UTF8 と書いてください。</td><td>JIS</td></tr>
+<tr valign="top"><td><a name="main_channel">channel</a><font color="red">★</font></td><td>ロイディが会話をするチャンネル。<b>メインチャンネル</b>と呼びます。</td><td>#reudy_test</td></tr>
+<tr valign="top"><td><a name="info_channel">info_channel</a><font color="red">★</font></td><td>ロイディが覚えた単語が流れるチャンネル。<a href="#teacher_mode">中の人モード</a>でも使います。<b>Infoチャンネル</b>と呼びます。 channel と同じでもいいです。</td><td>#reudy_test</td></tr>
+<tr valign="top"><td>login_password</td><td>IRCサーバのログインパスワード。Wideとかでは不要。</td><td>（空欄）</td></tr>
+<tr valign="top"><td>channel_key</td><td>パスワード付きのチャンネルに入る場合に必要。login_password（サーバに入るのに必要なパスワード）とは違うので注意してください。</td><td>（空欄）</td></tr>
+<tr valign="top"><td>respond_to_notice</td><td>trueなら、noticeメッセージにも反応する。</td><td>true / false</td></tr>
+<tr valign="top"><td>respond_to_external</td><td>trueなら、チャンネル外部のメッセージにも反応する。</td><td>true / false</td></tr>
+<tr valign="top"><td>speak_with_privmsg</td><td>trueなら、privmsgで話す。falseなら、noticeで話す。</td><td>true / false</td></tr>
+<tr valign="top"><td>auto_reconnect</td><td>trueなら、回線が切れたときに、自動で再接続する。</td><td>true / false</td></tr>
+<tr valign="top"><td>teacher_mode</td><td>「<a href="#teacher_mode">中の人モード</a>」を有効にするかどうか。</td><td>true / false</td></tr>
+<tr valign="top"><td>name</td><td>IRCの /whois で「名前」として表示されるもの。適当でいいです。</td><td>Reudy</td></tr>
+<tr valign="top"><td>real_name</td><td>IRCの /whois で「本名」として表示されるもの。適当でいいです。</td><td>Bot Reudy</td></tr>
+</table>
+</p>
+
+<p>
+<h3>共通の設定項目</h3>
+</p>
+
+<p>
+<table border="1">
+<tr valign="top"><td>nick</td><td>チャット用のニックネーム。IRCでは、他の人とかぶるとログインできません。</td><td>MyReudy</td></tr>
+<tr valign="top"><td>nicks</td><td>自分の名前として認識する単語。半角カンマで区切って複数指定できます。</td><td>Reudy,reudy,ロイディ</td></tr>
+<tr valign="top"><td>default_mode</td><td>最初のモード。0が沈黙モード、1が寡黙モード、2が通常モード、3が饒舌モード。</td><td>0 / 1 / 2 / 3</td></tr>
+<tr valign="top"><td>joining_message</td><td>入室時のメッセージ。省略可。</td><td>こんにちは。</td></tr>
+<tr valign="top"><td>leaving_message</td><td>移動時の退室メッセージ。省略可。</td><td>さようなら。</td></tr>
+<tr valign="top"><td>private_greeting</td><td>入室した他人に個人宛てで送るメッセージ。省略可。</td><td>こんにちは。</td></tr>
+<tr valign="top"><td>disable_commands</td><td>trueなら、「設定を更新」以外のコマンドを無効化。</td><td>true / false</td></tr>
+<tr valign="top"><td>disable_studying</td><td>trueなら、反応するだけで学習はしない。</td><td>true / false</td></tr>
+<tr valign="top"><td>target_nick</td><td>ニックネーム（Nick）を指定すると、その人の物まねをする。<sup><a href="#6"><b>*6</b></a></sup></td><td>Gimite</td></tr>
+<tr valign="top"><td>forbidden_nick</td><td>ここでニックネーム（Nick）を指定した人の発言は使わない。<sup><a href="#6"><b>*6</b></a></td><td>tobocchi|ProzaKc|hAnE</td></tr>
+<tr valign="top"><td>wait_before_speak</td><td>反応するまでに何秒 間（ま）を置くかの目安。小数も可。あまり短くするとサーバに蹴られる事が有ります。</td><td>2</td></tr>
+<tr valign="top"><td>wait_before_info</td><td>単語記憶メッセージを流す間隔（秒）。小数も可。あまり短くするとサーバに蹴られる事が有ります。</td><td>0.2</td></tr>
+</table>
+</p>
+
+<p>
+<small><a name="6"><b>*6</b></a>　正規表現を使えます。「<a href="#regex">正規表現について</a>」参照。</small>
+</p>
+
+<h2><a name="command">コマンド</a></h2>
+
+<p>
+ロイディがいるチャンネルで発言すると、ロイディにコマンドを送れます。
+</p>
+
+<p>
+<table border="1">
+<tr><th>コマンド（発言）</th><th>効果</th></tr>
+<tr><td>ロイディ、設定を更新。</td><td>settings.txtを読み直します。ただし、更新できない設定も有ります。</td></tr>
+<tr><td>ロイディ、沈黙モード。</td><td>沈黙モードになります。ほとんどしゃべりません。</td></tr>
+<tr><td>ロイディ、寡黙モード。</td><td>寡黙モードになります。時々しゃべります。</td></tr>
+<tr><td>ロイディ、通常モード。</td><td>通常モードになります。普通にしゃべります。</td></tr>
+<tr><td>ロイディ、饒舌モード。</td><td>饒舌モードになります。しゃべりまくります。</td></tr>
+<tr><td>ロイディ、「〜」を覚えさせたのは誰？</td><td>その単語を誰に教わったかを答えます。</td></tr>
+<tr><td>ロイディ、〜のものまねをしなさい。</td><td>その人のものまねを始めます。</td></tr>
+<tr><td>ロイディ、終了しなさい。</td><td>プログラムを終了します。</td></tr>
+</table>
+</p>
+
+<p>
+<a href="#setting">設定</a>で nicks を書き換えた場合は、「ロイディ」の部分を読み替えてください。
+</p>
+
+<p>
+<a href="#setting">設定</a>で disable_commands を true にすると、「設定を更新」以外のコマンドが無効になります。
+</p>
+
+<h2><a name="edit_log">ログを追加/編集する</a></h2>
+
+<p>
+ロイディのログは public/log.txt に入っています。各行が
+</p>
+
+<p>
+<tt>&nbsp;&nbsp;&nbsp;&nbsp;発言者 タブ 発言内容</tt>
+</p>
+
+<p>
+となっています。このフォーマットを守れば、自由にログを追加、編集できます。文字コードはEUCにしてください。<b>EUC以外で保存すると、データが壊れます</b>。
+</p>
+
+<p>
+<b>ロイディ実行中に public/log.txt をいじらないでください。ややこしい事態になります。</b>
+</p>
+
+<p>
+ログをファイルの最後に追加すると、次の起動の時に
+</p>
+
+<p>
+<tt>&nbsp;&nbsp;&nbsp;&nbsp;public/log.txt に追加されたログを読み込み中...</tt>
+</p>
+
+<p>
+と表示されます。追加分について単語の抽出とかをするので、しばらく時間がかかります。
+</p>
+
+<p>
+public/log.txt の途中を変更すると、
+</p>
+
+<p>
+<tt>&nbsp;&nbsp;&nbsp;&nbsp;public/log.txt の途中が変更されています。内部データを作り直します...</tt>
+</p>
+
+<p>
+と表示されます。この場合は内部データを一から作り直すので、<b>かなり</b>時間がかかります。
+</p>
+
+<h2><a name="add_word">単語を追加する</a></h2>
+
+<p>
+ロイディが覚えた単語は public/words.txt に入っています。Ver.3.05からフォーマットが変わって、単純に1行に1個の単語を書き並べたものになりました。
+</p>
+
+<p>
+ロイディは自動で単語を覚えますが、 public/words.txt に手動で書き足すのもOKです。文字コードはEUCにしてください。<b>EUC以外で保存すると、データが壊れます</b>。
+</p>
+
+<p>
+<b>ロイディ実行中に public/words.txt をいじらないでください。ややこしい事態になります。</b>
+</p>
+
+<p>
+public/words.txt を変更すると、
+</p>
+
+<p>
+<tt>&nbsp;&nbsp;&nbsp;&nbsp;public/words.txt が変更されたようです。単語を読み込み中...</tt>
+</p>
+
+<p>
+と表示されます。追加された単語を探しにいくので、しばらく時間がかかります。
+</p>
+
+<p>
+現バージョンでは、単語の削除はできません。（ public/words.txt から削除しても、内部のデータからは削除されずに残ります）。
+</p>
+
+<h2><a name="fast_start">ロイディを素早く起動する</a></h2>
+
+<p>
+ロイディは起動時に public/log.txt が手動で変更されてないかどうかをチェックします。ログが大きくなってくると、これはそれなりに時間がかかります。
+</p>
+
+<p>
+<tt>
+  &nbsp;&nbsp;&nbsp;&nbsp;ruby irc_reudy.rb -f public
+</tt>
+</p>
+
+<p>
+のように -f をつけると、このチェックを省略できます。
+</p>
+
+<h2><a name="teacher_mode">中の人モード</a></h2>
+
+<p>
+<b>この機能はVer.3.07で追加されました。また、今のところIRC版でのみ有効です。</b>
+</p>
+
+<p>
+ロイディは通常のモードでは、人間同士の会話や、ロイディと人間との会話から、自動的に反応を学習します。
+</p>
+
+<p>
+これに対して「中の人モード」では、特定の「中の人」が、ロイディの発言を「修正」していくことで、ロイディに反応を覚えこませることができます。
+</p>
+
+<p>
+中の人モードを有効にするには、<a href="#setting">設定</a>の teacher_mode を true にします。
+</p>
+
+<p>
+中の人がロイディの発言を修正するには、<a href="#info_channel">Infoチャンネル</a>で発言します。例えば、こんな感じです。 channel が #reudyroom 、 info_channel が #reudyinfo になってるとします。
+
+</p>
+
+<pre>
+<#reudyroom:Human1> こんちわ〜。
+<#reudyroom:RReudy> さようなら。
+<#reudyinfo:Teacher> こんにちは。
+</pre>
+
+<p>
+これでロイディは「こんちわ〜。」→「こんにちは。」という反応のパターンを覚えました。
+</p>
+
+<p>
+この方法では、中の人はロイディの発言を「修正」するだけです。ロイディが反応しなかった発言に対する反応は登録できません。
+</p>
+
+<p>
+<a href="#main_channel">メインチャンネル</a>の会話とは関係なく、ロイディに反応を覚えさせるには、次のようにします。
+
+</p>
+
+<pre>
+<#reudyinfo:Teacher> こんちわ〜。→→こんにちは。
+</pre>
+
+<p>
+「→」記号を2つ続ける所に注意してください。
+</p>
+
+<p>
+teacher_mode を true にすると、
+</p>
+
+<ul type=circle>
+	<li> <a href="#main_channel">メインチャンネル</a>の会話からの学習は無効になります。 </li>
+	<li> ロイディの発言には、できるだけ中の人から教わった反応を使うようになります。過去に<a href="#main_channel">メインチャンネル</a>で学習したデータは、原則として使いません。 </li>
+</ul>
+
+<h2><a name="regex">正規表現について</a></h2>
+
+<p>
+<a href="#setting">設定</a>の target_nick と forbidden_nick には、正規表現を使えます。詳しくは<a href="http://www.google.co.jp/search?q=%E6%AD%A3%E8%A6%8F%E8%A1%A8%E7%8F%BE&lr=lang_ja&ie=utf-8&oe=utf-8&aq=t">ぐぐったり</a>してみてください。ここでは、簡単な使い方だけ。
+</p>
+
+<p>
+複数のニックネームを指定するには、 | で区切ります。例えば、
+</p>
+
+<p>
+<tt>&nbsp;&nbsp;&nbsp;&nbsp;forbidden_nick&nbsp;&nbsp;RuThemis|ProzaKc</tt>
+</p>
+
+<p>
+は、「RuThemisとProzaKcの発言を使わない」という意味になります。
+</p>
+
+<p>
+記号には、（上の | 以外にも）特別な意味を持つものが有ります。普通の記号として使うには、記号の前に \ を入れてください。例えば、 [DIABL0] さんの物まねをさせるには、
+</p>
+
+<p>
+<tt>&nbsp;&nbsp;&nbsp;&nbsp;target_nick&nbsp;&nbsp;\[DIABL0\]</tt>
+</p>
+
+<p>
+とします。
+</p>
+
+<h2><a name="kcode">出力文字コードを変える</a></h2>
+
+<p>
+ロイディのターミナルへの出力文字コードは、標準ではShift-JISです。これを変えるには、 irc_reudy.rb をエディタで開いて、6行目の
+</p>
+
+<p>
+<tt>&nbsp;&nbsp;&nbsp;&nbsp;$OUT_KCODE= "SJIS" #出力文字コード</tt>
+</p>
+
+<p>
+の <b>"SJIS"</b> の部分を書き換えます。 <b>"SJIS"</b> 以外に、 <b>"EUC"</b> と <b>"UTF-8"</b> と <b>"JIS"</b> を指定できます。
+</p>
+
+<h2><a name="files">ファイル一覧</a></h2>
+
+<p>
+<table border="1">
+<tr><th>ファイル名</th><th>説明</th></tr>
+<tr><td><b>irc_reudy.rb</b></td><td>このファイルを使ってIRC版ロイディを起動します。「<a href="#usage_irc">IRC版の使い方</a>」参照。</td></tr>
+<tr><td>lib/*</td><td>ロイディの内部処理で使われるもの。直接は使いません。</td></tr>
+<tr><td><b>public/setting.txt</b></td><td>ロイディの設定をここに書いてください。「<a href="#setting">設定</a>」参照。</td></tr>
+<tr><td><b>public/log.txt</b></td><td>ロイディが覚えた発言のログ。追加/編集できます。「<a href="#edit_log">ログを追加/編集する</a>」参照。</td></tr>
+<tr><td><b>public/words.txt</b></td><td>ロイディが覚えた単語のリスト。追加もできます。「<a href="#add_word">単語を追加する</a>」参照。</td></tr>
+<tr><td>public/log.dat</td><td>内部使用のファイル。中身は log.txt とほとんど同じですが、<b>このファイルをいじってはいけません</b>。データが壊れます。</td></tr>
+<tr><td>public/words.dat<br>public/similar.gdbm<br>public/version.dat</td><td>内部使用のファイル。いじったり、消したりしないでください。</td></tr>
+</table>
+</p>
+
+<h2><a name="licence">ライセンス</a></h2>
+
+<p>
+<b>修正BSDライセンス</b>です。つまり、著作権表示さえすれば、改造、再配布、これを使ったソフトの配布などは全て自由です。ただし、何も保証しないし、仮に何か起きても僕は責任を取りません。詳しくはLICENCE.txtをどうぞ。
+</p>
+
+<p>
+ただし、irc-client.rbだけはPublic Domain Softwareです。
+</p>
+
+<h2><a name="distributor">配布者</a></h2>
+
+<p>
+質問、バグ、要望など有りましたら、<a href="http://gimite.net/bbs/tnote.cgi">掲示板</a>までどうぞ。
+</p>
+
+<p>
+元祖ロイディの居場所とロイディの解説は、こちら。<br>
+<a href="http://www.rogiken.org/SSB/">http://www.rogiken.org/SSB/</a>
+
+</p>
+<hr>
+<p> <h4 class=navi> Since 2003, Society for the Study of Botics </h4></p>
+
+</body>
+</html>

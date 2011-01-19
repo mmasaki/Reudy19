@@ -1,0 +1,72 @@
+<html>
+  <head>
+  <meta http-equiv="Content-Type" content="text/html; charset=euc-jp">
+  <title>ロイディ Ver.3.09 Windowsでの準備から実行まで --- SSB </title>
+  <link href="./style.css" type="text/css" rel="stylesheet" />  
+  </head>
+<body>
+
+<p>
+<a href="./index.html">[戻る]</a>
+<a href="http://www.rogiken.org">[ロ技研のトップ]</a>
+<a href="http://www.rogiken.org/cgi-bin/ssrbbs.cgi">[ロ技研掲示板]</a>
+
+<h1>ロイディ Ver.3.09 Windowsでの準備から実行まで</h1>
+
+
+<p>
+Windowsでロイディを動かす準備から実行までを説明します。「<a href="reudyman.html">ロイディ Ver.3.09 マニュアル</a>」も読んでください。
+</p>
+
+<h2>必要なもののインストール</h2>
+
+<p>
+ここではRubyのmingw版を例にしますが、cygwin版やmswin32版でもたぶん大丈夫です。
+</p>
+
+<ul type=circle>
+	<li> <a href="http://ftp.ruby-lang.org/pub/ruby/binaries/mingw/1.8/">Ruby 1.8のmingw版バイナリ</a>のページから、 ruby-1.8.4-***-i386-mingw32.tar.gz というファイル（いくつか有れば新しい方）をダウンロード。 </li>
+	<li> ダウンロードしたファイルを適当な場所に解凍<sup><a href="#1"><b>*1</b></a></sup>。ここでは C:\ruby とします。つまり、 C:\ruby\bin の下に ruby.exe とかが有る状態です。 </li>
+	<li> <a href="http://jarp.does.notwork.org/win32/">RubyのWin32用拡張ライブラリのページ</a>から、 gdbm-***-mingw32.zip というファイルをダウンロード。解凍してできた bin\gdbm.dll を C:\ruby\bin の中にコピー。このファイル以外は要らないっぽいです。 </li>
+	<li> 最後にロイディ本体です。 <a href="http://rogiken.org/SSB/reudy309.zip">reudy309.zip</a> （バージョンアップの場合は <a href="http://rogiken.org/SSB/reudy309up.zip">reudy309up.zip</a> ）をダウンロードして、適当な場所に解凍してください。ここでは C:\reudy とします。 </li>
+</ul>
+
+<p>
+<small><a name="1"><b>*1</b></a>　tar.gzが解凍できない人は<a href="http://park8.wakwak.com/~app/Lhaca/lhacadx.html">+Lhaca デラックス版</a>でも入れてください。</small>
+</p>
+
+<h2>実行（IRCで動かす場合）</h2>
+
+<p>
+実行する前に、「<a href="reudyman.html#usage_irc">ロイディ Ver.3.09 マニュアル</a>」を見ながら、 C:\reudy\public\setting.txt を編集してください。
+</p>
+
+<p>
+<b>Windows NT/2000/XP/Vistaの場合：</b>スタートメニューの[ファイル名を指定して実行]で <tt><b>cmd</b></tt> と入力して、[OK]をクリック。コマンドプロンプトが起動します。
+</p>
+
+<p>
+<b>Windows 95/98/Meの場合：</b>スタートメニューの[ファイル名を指定して実行]で <tt><b>command</b></tt> と入力して、[OK]をクリック。MS-DOSプロンプトが起動します。
+</p>
+
+<p>
+ここで、以下の順に入力します。<font color="gray">（Enter）</font>の所ではEnterキーを押します。
+</p>
+
+<p>
+<tt>
+  &nbsp;&nbsp;&nbsp;&nbsp;C:<font color="gray">（Enter）</font><br>
+  &nbsp;&nbsp;&nbsp;&nbsp;cd \reudy<font color="gray">（Enter）</font><br>
+  &nbsp;&nbsp;&nbsp;&nbsp;C:\ruby\bin\ruby irc_reudy.rb public<font color="gray">（Enter）</font><br>
+</tt>
+</p>
+
+<p>
+これで動きます。
+
+</p>
+<hr>
+<p> <h4 class=navi> Since 2003, Society for the Study of Botics </h4></p>
+
+</body>
+</html>
