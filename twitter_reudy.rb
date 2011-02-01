@@ -9,6 +9,7 @@ CONSUMER = { #get it in http://twitter.com/oauth_client/new
 
 trap(:INT){ exit }
 
+require 'optparse'
 require 'rubytter'
 require 'highline'
 require $REUDY_DIR+'/bot_irc_client'
@@ -26,7 +27,7 @@ class TwitterClient
     @user.client = self
     @last_tweet = Time.now
     
-    cons = OAuth::Consumer.new(CONSUMER[:key],CONSUMER[:secret], :site => "http://twitter.com")
+    cons = OAuth::Consumer.new(CONSUMER[:key],CONSUMER[:secret], :site => "http://api.twitter.com")
 
     unless File.exist?(File.dirname(__FILE__)+"/token")
       request_token = cons.get_request_token
@@ -68,19 +69,32 @@ class TwitterClient
   end
 end
 
-if ARGV.size == 1 || ARGV.size == 2
-  #twitter用ロイディを作成
-  client = TwitterClient.new(Reudy.new(ARGV[0]))
+opt = OptionParser.new
   
-  loop do
+directory = 'public'
+opt.on('-d DIRECTORY') do |v|
+  directory = v
+end
+
+db = 'pstore'
+opt.on('--db DB_TYPE') do |v|
+  db = v
+end
+opt.parse!(ARGV)  
+
+#twitter用ロイディを作成
+client = TwitterClient.new(Reudy.new(directory,{},db))
+  
+loop do
+  begin
     client.r.friends_timeline.each do |status|
       puts "#{status.user.screen_name}: #{status.text}"
       client.onTweet(status)
     end
     sleep(60)
+  rescue => ex
+    puts ex.message
   end
-else
-  $stderr.print("Usage: ruby stdio_reudy.rb ident_dir your_name\n\n 'ident_dir' is a directory which contains setting.txt, log.txt, etc.\n")
 end
 
 end #module Gimite
