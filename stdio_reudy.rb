@@ -6,11 +6,12 @@
 $OUT_KCODE= "UTF-8" #出力文字コード
 $REUDY_DIR= "./lib/reudy" unless defined?($REUDY_DIR) #スクリプトがあるディレクトリ
 
-trap(:INT){ exit }
-
+require 'optparse'
 require $REUDY_DIR+'/bot_irc_client'
 require $REUDY_DIR+'/reudy'
 require $REUDY_DIR+'/reudy_common'
+
+trap(:INT){ exit }
 
 module Gimite
 
@@ -51,23 +52,28 @@ class StdioClient
   def speak(s)
     puts s
   end
-  
-  #終了する
-  def exit
-    Kernel.exit(0)
-  end
-  
 end
 
+opt = OptionParser.new
+
+directory = 'public'
+opt.on('-d DIRECTORY') do |v|
+  directory = v
+end
+
+db = 'pstore'
+opt.on('--db DB_TYPE') do |v|
+  db = v
+end
+opt.parse!(ARGV)
+
+nick = 'test'
+opt.on('-n nickname') do |v|
+  nick = v
+end
 
 $stdout.sync = true
-if ARGV.size == 1 || ARGV.size == 2
-  #標準入出力用ロイディを作成
-  client = StdioClient.new(Reudy.new(ARGV[0]), ARGV[1] && ARGV[1])
-  client.loop
-else
-  $stderr.print("Usage: ruby stdio_reudy.rb ident_dir your_name\n\n 'ident_dir' is a directory which contains setting.txt, log.txt, etc.\n")
+client = StdioClient.new(Reudy.new(directory,{},db),nick) #標準入出力用ロイディを作成
+client.loop
+
 end
-
-
-end #module Gimite
