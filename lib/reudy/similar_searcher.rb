@@ -63,6 +63,7 @@ class SimilarSearcher
     size = cont.size
     until cont.empty?
       block.call(cont.delete_at(rand(size)))
+      size -= 1
     end
   end
   

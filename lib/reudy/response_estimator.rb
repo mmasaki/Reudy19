@@ -29,6 +29,7 @@ class ResponseEstimator
   #該当するものが無ければ[nil,0]を返す。
   #debugが真なら、デバッグ出力をする。
   def responseTo(mid, debug = false)
+    return [nil,0] unless mid
     numTargets = 5
     if @cache[mid] && @msgFilter.call(@cache[mid][0])
       return @cache[mid] #キャッシュにヒット。

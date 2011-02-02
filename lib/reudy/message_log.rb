@@ -47,7 +47,7 @@ class MessageLog
   def updateByOuterFile(outerFileName)
     msg = nil
     isAdded = false
-    if size == 0
+    if size.zero?
       msg = @innerFileName + " が有りません。作成します...\n"
       isAdded = true
     elsif MessageLog.enable_update_check && File.mtime(outerFileName) > File.mtime(@innerFileName)
@@ -65,10 +65,10 @@ class MessageLog
             warn outerFileName + " に追加されたログを読み込み中..."
             isAdded = true
           end
-          warn (n+1).to_s + "行目..." if (n+1) % 100 == 0
+          warn (n+1).to_s + "行目..." if ((n+1) % 100).zero?
           addMsg(fromNick, body, false)
         else
-          warn (n+1).to_s + "行目..." if (n+1) % 10000 == 0
+          warn (n+1).to_s + "行目..." if ((n+1) % 10000).zero?
           break if fromNick != self[n].fromNick || body != self[n].body
         end
         n += 1
@@ -79,7 +79,7 @@ class MessageLog
         clear
         n = 0
         eachMsgInFile(outerFileName) do |fromNick, body|
-          warn(n+1).to_s + "行目..." if (n+1) % 100 == 0
+          warn(n+1).to_s + "行目..." if ((n+1) % 100).zero?
           addMsg(fromNick, body, false)
           n += 1
         end
@@ -97,9 +97,7 @@ class MessageLog
       @innerFile.pos = @msgPoses[n]
       line = @innerFile.gets
       @innerFile.seek(0, IO::SEEK_END)
-      if line && line.chomp =~ /(.*)\t(.*)/o
-        return Message.new($1, $2)
-      end
+      return Message.new($1, $2) if line && line.chomp =~ /(.*)\t(.*)/o
     end
     return nil
   end
@@ -155,7 +153,8 @@ class MessageLog
     Kernel.open(@innerFileName, "r") do |file|
       pos = 0
       while line = file.gets
-        @msgPoses.push(pos) if line.chomp =~ /(.*)\t(.*)/o
+        line.chomp!
+        @msgPoses.push(pos) if line =~ /(.*)\t(.*)/o
         pos = file.pos
       end
     end
@@ -167,7 +166,8 @@ class MessageLog
     return unless File.exist?(fileName)
     Kernel.open(fileName, "r") do |file|
       file.each_line do |line|
-        block.call($1, $2) if line.chomp =~ /(.*)\t(.*)/o
+        line.chomp!
+        block.call($1, $2) if line =~ /(.*)\t(.*)/o
       end
     end
   end
@@ -177,7 +177,7 @@ class MessageLog
     @observers.each do |observer|
       observer.onClearLog
     end
-    @msgPoses = []
+    @msgPoses.clear
     @innerFile.close if @innerFile
     @innerFile = open(@innerFileName, File::RDWR | File::CREAT | File::TRUNC)
     @innerFile.sync = sync

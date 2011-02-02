@@ -16,7 +16,7 @@ class WordSearcher
   
   #文章がその単語を含んでいるか
   def hasWord(sentence, word)
-    return false if !sentence.index(word.str) || !(sentence =~ Regexp.new("(.|^)" + Regexp.escape(word.str) + "(.|$)"))
+    return false if !sentence.include?(word.str) || !(sentence =~ Regexp.new("(.|^)" + Regexp.escape(word.str) + "(.|$)"))
     preChar = $1
     folChar = $2
     wordAr = word.str.split(//)

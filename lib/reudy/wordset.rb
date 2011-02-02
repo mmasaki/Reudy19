@@ -17,11 +17,11 @@ class Word
   end
   
   def ==(other)
-    return @str==other.str
+    return @str == other.str
   end
   
   def eql?(other)
-    return @str==other.str
+    return @str == other.str
   end
   
   def hash
@@ -29,11 +29,11 @@ class Word
   end
   
   def <=>(other)
-    return @str<=>other.str
+    return @str <=> other.str
   end
   
   def inspect
-    return "<Word: \""+str+"\">"
+    return "<Word: \"" + str + "\">"
   end
 
   attr_accessor :str
@@ -54,26 +54,24 @@ class WordSet
   def initialize(innerFileName)
     @innerFileName = innerFileName
     @outerFileName = nil
+    @innerFileTime = nil
+    @words = []
+    @addedWords = []
     if File.exist?(@innerFileName)
       @innerFileTime = File.mtime(@innerFileName)
       Kernel.open(@innerFileName, "r") do |file|
         @words = Marshal.load(file)
       end
-    else
-      @innerFileTime = nil
-      @words = []
     end
-    @addedWords = []
   end
   
   #外部ファイルを登録し、外部ファイルの内容を内部データに反映する。
   def updateByOuterFile(outerFileName, wtmlManager)
     @outerFileName = outerFileName
-    return unless File.exists?(@outerFileName)
-    return if @innerFileTime && @innerFileTime >= File.mtime(@outerFileName)
+    return if !File.exists?(@outerFileName) || (@innerFileTime && @innerFileTime >= File.mtime(@outerFileName))
     warn @outerFileName + " が変更されたようです。単語を読み込み中..."
     addedWords = @addedWords
-    @addedWords = []
+    @addedWords.clear
     isOldFormat = false
     n = 0
     Kernel.open(@outerFileName, "r") do |file|
@@ -81,11 +79,10 @@ class WordSet
         #外部ファイル中の単語を追加する。
         #内部データに有って外部ファイルに無い単語については、現バージョンでは何もしていないので注意。
         #data[1], data[2]はVer.3.04以前のデータを引き継ぐために使われる。
-        str.chomp!
         next if str.empty?
-        warn (n+1).to_s + "語目..." if (n+1) % 100 == 0
-        word = addWord(str)
-        if word
+        str.chomp!
+        warn (n+1).to_s + "語目..." if ((n+1) % 100).zero?
+        if word = addWord(str)
           warn "単語「" + word.str + "」を追加中..."
           wtmlManager.attachMsgList(word)
         end
@@ -102,8 +99,8 @@ class WordSet
     word = Word.new(str, author)
     i = 0
     while i < @words.size
-      break if str.include?(@words[i].str)
-      i += 1
+      break if str.index(@words[i].str)
+      i+= 1
     end
     if @words[i] && @words[i].str == str
       return nil
@@ -151,9 +148,8 @@ class WordSet
   def makeNewFileName(base)
     return base unless File.exist?(base)
     i = 2
-    while true
-      name = base + i.to_s
-      return name unless File.exist?(name)
+    loop do
+      return name unless File.exist?("#{base}#{i}")
       i += 1
     end
   end

@@ -169,13 +169,14 @@ class Reudy
   #単語がこれより多く出現してたら置換などの対象にしない、という
   #ボーダを求めて@wordAdoptBorderに代入。
   def setWordAdoptBorder
-    msgCts = @wordSet.map{ |w| w.mids.size }.sort!
-    msgCts.reverse!
+    msgCts = @wordSet.map{ |w| w.mids.size }
     if msgCts.empty?
       @wordAdoptBorder = 0
-    else
-      @wordAdoptBorder = msgCts[msgCts.size / 50]
+      return
     end
+    msgCts.sort!
+    msgCts.reverse!
+    @wordAdoptBorder = msgCts[msgCts.size / 50]
   end
   
   #その単語が置換などの対象になるか
@@ -186,8 +187,7 @@ class Reudy
   #発言をベース発言として使用可能か。
   def isUsableBaseMsg(msgN)
     return false if msgN >= size = @log.size #存在しない発言。
-    msg = @log[msgN]
-    return unless msg #空行。削除された発言など。
+    return unless msg = @log[msgN] #空行。削除された発言など。
     nick = msg.fromNick
     #発言が新しすぎる。（中の人モードでは無効）
     #自分自身の発言。
@@ -220,22 +220,20 @@ class Reudy
   
   #類似発言検索用のフィルタ
   def similarSearchFilter(msgN)
-    return responseTo(msgN)[0] != nil
+    return !responseTo(msgN)[0]
   end
   
   #sentence中の自分のNickをtargetに置き換える。
   def replaceMyNicks(sentence, target)
-    myNicksReg = Regexp.new(@myNicks.map{ |n| Regexp.escape(n) }.join("|"))
-    return sentence.gsub(myNicksReg){ target }
+    return sentence.gsub( Regexp.new(@myNicks.map{ |n| Regexp.escape(n) }.join("|"))){ target }
   end
   
   #入力文章から既知単語を拾う。
   def pickUpInputWords(input)
-    input = replaceMyNicks(input, " ")
     #入力に含まれる単語を列挙
-    @newInputWords = @wordSearcher.searchWords(input).select{ |w| canAdoptWord(w) }
+    @newInputWords = @wordSearcher.searchWords(replaceMyNicks(input, " ")).select{ |w| canAdoptWord(w) }
     #入力に単語が無い場合は、時々入力語をランダムに変更
-    if @newInputWords.empty? && rand(50) == 0
+    if @newInputWords.empty? && rand(50).zero?
       word = @wordSet.words[rand(@wordSet.words.size)]
       @newInputWords = [word] if canAdoptWord(word)
     end
@@ -244,7 +242,7 @@ class Reudy
     @newInputWords += assocWords
     #入力語の更新
     unless @newInputWords.empty?
-      if rand(5) != 0
+      if rand(5).nonzero?
         @inputWords = @newInputWords
       else
         @inputWords += @newInputWords
@@ -275,11 +273,15 @@ class Reudy
   #発言の順序はランダム。
   def eachMsgContainingWords(inputWords, &block)
     words = inputWords.clone
+    words_size = words.size
     until words.empty?
-      word = words.delete_at(rand(words.size))
+      word = words.delete_at(rand(words_size))
+      words_size -= 1
       msgNs = word.msgNs.clone
+      msgNs_size = msgNs.size
       until msgNs.empty?
-        block.call(msgNs.delete_at(rand(msgNs.size)))
+        block.call(msgNs.delete_at(rand(msgNs_size)))
+        msgNs_size -= 1
       end
     end
   end
@@ -332,7 +334,7 @@ class Reudy
   def getBaseMsgStr(msgN)
     str = @log[msgN].body
     #文の後半に[＜＞]が有れば、その後ろはカット。
-    str = $1 if str =~ /^(.*)[＜＞]/o && $1.size >= str.length / 2
+    str = $1 if str =~ /^(.*)[＜＞]/o && $1.size >= str.size / 2
     return str
   end
   
@@ -346,7 +348,7 @@ class Reudy
         newParts = []
         (0...parts.size).each do |i|
           part = parts[i]
-          if i % 2 == 0
+          if (i % 2).zero?
             while part =~ Regexp.new("^(.*?)" + Regexp.escape(word.str) + "(.*)$")
               newParts.push($1, word.str)
               part = $2
@@ -358,21 +360,23 @@ class Reudy
       end
     end
     #先頭から2番目以降の単語の直前でカットしたりしなかったり。
-    if parts.size > 1
-      cutPos = rand((parts.size-1)/2) * 2 +1
+    if parts_size = parts.size > 1
+      wordCt =  (parts_size-1) / 2
+      cutPos = rand(wordCt) * 2 + 1
       parts = [""]+parts[cutPos..-1] if cutPos > 1
     end
-    wordCt=  (parts.size-1) / 2
     #単語を除いた文章が短すぎるものはある確率で却下。
-    if wordCt > 0 && !toForce
-      len = sigma(0...parts.size){ |i| i % 2 == 0 ? parts[i].size : 0 }
+    if wordCt.nonzero? && !toForce
+      len = sigma(0...parts.size){ |i| (i % 2).zero? ? parts[i].size : 0 }
       return nil unless shouldAdoptSaying(len)
     end
     #単語を置換。
-    newWords = newWords.close
+    newWords = newWords.clone
+    newWords_size = newWords.size
     until newWords.empty?
       oldWordStr = parts[rand(wordCt)*2+1]
-      newWordStr = newWords.delete_at(rand(newWords.size)).str
+      newWordStr = newWords.delete_at(rand(newWords_size)).str
+      newWords_size -= 1
       (0...wordCt).each do |i|
         parts[i*2+1] = newWordStr if parts[i*2+1] == oldWordStr
       end
@@ -479,8 +483,7 @@ class Reudy
       loadSettings
       return "設定を更新しました。"
     end
-    return nil if settings("disable_commands") == "true"
-      #コマンドが禁止されてる
+    return nil if settings("disable_commands") == "true" #コマンドが禁止されている場合
     case input
     when /黙れ|黙りなさい|黙ってろ|沈黙モード/o
       return changeMode(0) ? "沈黙モードに切り替える。" : ""
@@ -540,9 +543,9 @@ class Reudy
   
   #ログに発言が追加された。
   def onAddMsg
-    msg = @log[@log.size-1]
-    @fromNick = msg.fromNick if msg.fromNick != "!"
-    if settings("teacher_mode") != "true"
+    msg = @log[-1]
+    @fromNick = msg.fromNick unless msg.fromNick == "!"
+    unless settings("teacher_mode") == "true"
       #中の人モードでは、単語の抽出は別にやる。
       @extractor.processLine(msg.body)
     end

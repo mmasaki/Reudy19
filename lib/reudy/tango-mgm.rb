@@ -33,15 +33,19 @@ class WordExtractor
   # WordExtractor(単語候補リストを保持する長さ,単語追加時のコールバック)
   def initialize(candlistlength=7,onaddword=nil)
     # 単語候補のリスト
-    @candList=Array.new(candlistlength,[])
-    @onAddWord=onaddword
+    @candList = Array.new(candlistlength,[])
+    @onAddWord = onaddword
   end
 
   def candList; @candList; end
 
   # 単語候補のリストを整理して返す
   def getCandList
-    return @candList.flatten.compact.uniq
+    candList = @candList
+    candList.uniq!
+    candList.flatten!
+    candList.compact!
+    return candList
   end
 
   # 単語として適切かどうか判定する
@@ -95,24 +99,17 @@ class WordExtractor
   # 前後の文字列も参考にする
   # 不適だとnilを返す
   def checkWordCand(word,prestr='',poststr='')
-    if prestr == nil
+    unless prestr
       prestr = ''
       poststr = ''
     end
-    word = word.clone
+    word = word.dup
 
-    # 以下の2条件に当てはまった場合は一部の禁則を免除する
-    if (prestr =~ /[、。．，！？（）・…]$/o || prestr == '') \
-     &&(poststr =~ /^[はが]([^ぁ-ん]|$)/o) \
-     &&((word+poststr[0..0]) !~ /(では|だが|には|のが)$/o) \
+    unless  ((prestr =~ /[、。．，！？（）・…]$/o || prestr == '') \
+     && poststr =~ /^[はが]([^ぁ-ん]|$)/o \
+     &&((word + poststr[0..0]) !~ /(では|だが|には|のが)$/o) \
      &&(word =~ /^[ぁ-んー]+$/o || word =~ /^[^ぁ-ん]/o) \
-     &&(word.length >= 6)
-      # 主語っぽいもの：{句読点系or文頭}〜[はが]{ひらがな以外}
-      # （ただし「では」「だが」「には」「のが」となるものを除く）
-      # Ruby 1.6にはjlengthがないので適当に逃げている
-    elsif (prestr =~ /[＞＜]$/o)&&(poststr == '')
-      # 文末の「＞〜」や「＜〜」
-    else
+     && word.size >= 3) || (prestr =~ /[＞＜]$/o && poststr == '')
       word = wordFilter1(word)
     end
     return wordFilter2(word)
@@ -122,8 +119,7 @@ class WordExtractor
   # 追加すべき単語（wordとは異なる場合も）またはnil（不適）を返す
   def checkWord(word)
     # 語末のゴミの除去
-    while word =~ /^(.+)(とか|しなさい|ですか?|のよう|だから|する|って|という|して|したい?|まで|しなさい|ですか?|のよう|せず|される?|には|させる?|しか|ました|できる?)$/o \
-        || word =~ /^([^ぁ-ん]+)[しだすともにを]$/o
+    while word =~ /^(.+)(とか|しなさい|ですか?|のよう|だから|する|って|という|して|したい?|まで|しなさい|ですか?|のよう|せず|される?|には|させる?|しか|ました|できる?)$/o  || word =~ /^([^ぁ-ん]+)[しだすともにを]$/o
       word = $1
     end
     case word
@@ -144,16 +140,21 @@ class WordExtractor
   def extractCands(s)
     result = []
 
-    ss = s.split(//)
+    a = s.scan(/[-_0-9a-zA-Z]+/) #文字列から英数字の連続を取り除き、配列に格納する
+    a += s.scan(/[ー−ァ-ン]+/) #カタカナに対して同様に
+    a.each do |t|
+      s.delete!(t)
+    end
 
-    # 英数字の連続を結合する
-    (ss.size-2).downto(0) {|i| ss[i] += ss.delete_at(i+1) if (ss[i] =~ /[-_0-9a-zA-Z]$/o)&&(ss[i+1] =~ /[-_0-9a-zA-Z]$/o)}
-    # カタカナの連続を結合する
-    (ss.size-2).downto(0) {|i| ss[i] += ss.delete_at(i+1) if (ss[i] =~ /[ー−ァ-ン]$/o)&&(ss[i+1]=~/[ー−ァ-ン]$/o)}
+    a.each do |str| #英数字、カタカナの連続はそのままcheckWordCandにかける
+      cand = checkWordCand(str)
+      result << cand if cand
+    end
 
-    (0...ss.size).each do |i|
-      (i...ss.size).each do |j|
-        cand = checkWordCand(ss[i..j].join,ss[0...i].join,ss[j+1...ss.size].join)
+    s_size = s.size
+    (0...s_size).each do |i| #それ以外
+      (i...s_size).each do |j|
+        cand = checkWordCand(s[i..j],s[0...i],s[j+1..-1])
         result << cand if cand
       end
     end
@@ -165,9 +166,10 @@ class WordExtractor
 
   # 単語リスト中の包含関係にあるものを削除して単語リストを最適化する
   def optimizeWordList(wordcand)
-    (0...(wordcand.length-1)).each do |i|
+    wordcand_size = wordcand.size
+    0.upto(wordcand_size-2) do |i|
       next unless wordcand[i]
-      ((i+1)...wordcand.length).each do |j|
+      (i+1).upto(wordcand_size) do |j|
         next unless wordcand[j]
         if wordcand[j].include?(wordcand[i])
           wordcand[i] = nil
@@ -185,12 +187,11 @@ class WordExtractor
   def extractWords(line,words=[])
 
     # 単語侯補が文章中に使われてたら単語にする
-    wordcand = getCandList.reject {|word| !line.include?(word)}
-
+    wordcand = getCandList.select {|word| line.include?(word)}
     # 新しく加わる単語同士に包含関係があったら短いほうを消去する
     ## 例えば「なると」という単語が登録される時に
     ## 「なる」「ると」が同時に単語と認識されてしまうのを防ぐ。
-    wordcand = optimizeWordList(wordcand)
+    wordcand = optimizeWordList(wordcand) unless wordcand.empty?
     
     # 禁則処理
     wordcand2 = []
@@ -198,62 +199,32 @@ class WordExtractor
       word2 = checkWord(word)
       wordcand2.push(word2) if word2
     end
-
+    
     # 新しい単語を本当に単語として認定する。
     ## ただしダブる場合は片方を消す。
     words = words | wordcand2
-
+ 
     if @onAddWord
-      words.each {|w| @onAddWord.call(w)}
+      words.each do |w|
+        @onAddWord.call(w)
+      end
     end
+
+#    dprint("単語", words)
 
     return words
   end
 
-  # 多バイト文字またはシングルバイト文字だけからなる文字列を切り出す
-  # $KCODEが適切に設定されていなければならない
-  # 0,2,4・・・番目がシングルバイト文字の文字列
-  def splitByCharType(s)
-    result = []
-
-    issingle = true
-    word = ''
-    s.split(//).each{|c|
-      if issingle != (c.size == 1)
-        result << word
-        word = ''
-      end
-      word += c
-      issingle = (c.size == 1)
-    }
-    result << word unless word.empty?
-
-    return result
-  end
-
   # 単語侯補のリストを更新する
   def renewCandList(line)
-    newlist = []
-    wordlist = splitByCharType(line)
-    (0...wordlist.size).each do |i|
-      if i % 2 == 0
-        wordlist[i].split(' ').each do |w|
-          newlist << w if checkWordCand(w)
-        end
-      else
-        newlist += extractCands(wordlist[i])
-      end
-    end
-
     @candList.shift
-    @candList << newlist
+    @candList << extractCands(line)
   end
 
   # 単語侯補のリストを更新する
   # (シングルバイト文字列の事前分離を行わないバージョン)
   def renewCandList2(line)
-    @candList.shift
-    @candList << extractCands(line)
+    abort "renewCandList2"
   end
 
   # 単語取得・単語候補リスト更新を1行分処理する

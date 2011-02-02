@@ -14,7 +14,7 @@ class AttentionDecider
   def initialize
     @lastNick = nil #最後の発言者。"!"なら、自分。
     @prob = 1.0
-    @recentSpeakers = [nil] * 10
+    @recentSpeakers = Array.new(10) #nilで初期化されている
   end
   
   #パラメータを設定する。
