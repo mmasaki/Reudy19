@@ -32,7 +32,7 @@ class WordToMessageListManager
   #単語wordにmsgNsを付ける。
   def attachMsgList(word)
     word.msgNs = []
-    (0...@log.size).each do |i|
+    @log.each_index do |i|
       word.msgNs.push(i) if @wordSearcher.hasWord(@log[i].body, word)
     end
   end

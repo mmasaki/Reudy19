@@ -48,10 +48,10 @@ class MessageLog
     msg = nil
     isAdded = false
     if size.zero?
-      msg = @innerFileName + " が有りません。作成します...\n"
+      msg = "#{@innerFileName} が有りません。作成します...\n"
       isAdded = true
     elsif MessageLog.enable_update_check && File.mtime(outerFileName) > File.mtime(@innerFileName)
-      msg = outerFileName + " が変更されたようです。調査中...\n"
+      msg = "#{outerFileName} が変更されたようです。調査中...\n"
     end
     if msg
       warn msg
@@ -65,21 +65,21 @@ class MessageLog
             warn outerFileName + " に追加されたログを読み込み中..."
             isAdded = true
           end
-          warn (n+1).to_s + "行目..." if ((n+1) % 100).zero?
+          warn "#{n+1}行目..." if ((n+1) % 100).zero?
           addMsg(fromNick, body, false)
         else
-          warn (n+1).to_s + "行目..." if ((n+1) % 10000).zero?
+          warn "#{n+1}行目..." if ((n+1) % 10000).zero?
           break if fromNick != self[n].fromNick || body != self[n].body
         end
         n += 1
       end
       #途中が編集されてたら、内部データを一から作り直す。
       if n < size
-        warn(outerFileName + " の途中が変更されています。内部データを作り直します...")
+        warn "#{outerFileName} の途中が変更されています。内部データを作り直します..."
         clear
         n = 0
         eachMsgInFile(outerFileName) do |fromNick, body|
-          warn(n+1).to_s + "行目..." if ((n+1) % 100).zero?
+          warn "#{n+1}行目..." if ((n+1) % 100).zero?
           addMsg(fromNick, body, false)
           n += 1
         end
@@ -96,8 +96,9 @@ class MessageLog
     if @msgPoses[n]
       @innerFile.pos = @msgPoses[n]
       line = @innerFile.gets
+      line.chomp! if line
       @innerFile.seek(0, IO::SEEK_END)
-      return Message.new($1, $2) if line && line.chomp =~ /(.*)\t(.*)/o
+      return Message.new($1, $2) if line =~ /(.*)\t(.*)/o
     end
     return nil
   end
@@ -139,11 +140,13 @@ class MessageLog
   #内部ファイルの先頭に注意書きを書いとく。
   def addHeadNoticeToInnerFile
     Kernel.open(@innerFileName, "a") do |f|
-      f.print("※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※\n")
-      f.print("※※※※このファイルはロイディ内部で使われるデータです。                      ※※※※\n")
-      f.print("※※※※ログを編集するには、このファイルではなく、log.txtを編集してください。 ※※※※\n")
-      f.print("※※※※このファイルを編集すると、データが壊れます。                          ※※※※\n")
-      f.print("※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※\n")
+      f.print <<EOS
+※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※
+※※※※このファイルはロイディ内部で使われるデータです。                      ※※※※
+※※※※ログを編集するには、このファイルではなく、log.txtを編集してください。 ※※※※
+※※※※このファイルを編集すると、データが壊れます。                          ※※※※
+※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※
+EOS
     end
   end
   

@@ -31,7 +31,7 @@ class SimilarSearcher
     @tailMap["ませんでし"].include?(10)
   は全てtrueになる。これを使って「文尾が同じor1文字違いの発言」を探す。
 =end
-  include(Gimite)
+  include Gimite
   
   def initialize(fileName, log, db)
     require $REUDY_DIR+"/#{db}"
@@ -48,7 +48,7 @@ class SimilarSearcher
     if ws.size >= @compLen
       wtail = ws[-@compLen..-1]#文尾。
       randomEach(@tailMap[wtail.join], &block)
-      (0...@compLen).each do |i|
+      0.upto(@compLen-1) do |i|
         randomEach(@tailMap[(wtail[0...i]+wtail[i+1..-1]).join], &block) #途中を1文字抜かしたもの。
       end
     else
@@ -88,7 +88,7 @@ class SimilarSearcher
     end
     if @tailMap.empty?
       warn "文尾辞書( "+fileName+" )を作成中..."
-      (0...@log.size).each do |i|
+      0.upto(@log.size-1) do |i|
         warn (i+1).to_s + "行目..." if (i+1) % 1000 == 0
         recordTail(i)
       end
@@ -102,7 +102,7 @@ class SimilarSearcher
     if ws.size >= @compLen
       wtail = ws[-@compLen..-1] #文尾。
       addToTailMap(wtail, lineN)
-      (0...@compLen).each do |i|
+      0.upto(@compLen-1) do |i|
         addToTailMap(wtail[0...i]+wtail[i+1..-1], lineN) #途中を1文字抜かしたもの。
       end
     else

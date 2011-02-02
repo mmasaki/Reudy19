@@ -18,7 +18,7 @@ module Gimite
 
 #人工無能ロイディ
 class Reudy
-  include(Gimite)
+  include Gimite
   
   def initialize(dir, fixedSettings = {},db="pstore")
     @attention = nil
@@ -377,7 +377,7 @@ class Reudy
       oldWordStr = parts[rand(wordCt)*2+1]
       newWordStr = newWords.delete_at(rand(newWords_size)).str
       newWords_size -= 1
-      (0...wordCt).each do |i|
+      0.upto(wordCt-1) do |i|
         parts[i*2+1] = newWordStr if parts[i*2+1] == oldWordStr
       end
       break if rand < 0.5
@@ -444,9 +444,10 @@ class Reudy
     end
     if mustRespond && !output
       #ランダム発言
+      log_size = @log.size
       2000.times do
-        #ハングるのを防ぐため、無限ループにはしない
-        msgN = rand(@log.size)
+        #ハングるのを防ぐため、無限ループにはしないa
+        msgN = rand(log_size)
         if isUsableBaseMsg(msgN)
           baseMsgN = msgN
           output = getBaseMsgStr(baseMsgN)
@@ -470,7 +471,7 @@ class Reudy
     @lastSpeachInput = input
     @lastSpeach = output
     studyMsg("!", output) #自分の発言を記憶する。
-    @client.outputInfo("「" + input + "」に反応した。") if settings("teacher_mode") == "true"
+    @client.outputInfo("「#{input}」に反応した。") if settings("teacher_mode") == "true"
     @attention.onSelfSpeak(@wordSearcher.searchWords(output))
     @client.speak(output)
   end
@@ -615,7 +616,7 @@ class Reudy
     if input
       @log.addMsg("!input", input)
       @log.addMsg("!teacher", output)
-      @client.outputInfo("反応「%s→→%s」を学習した。" % [input, output]) if @client
+      @client.outputInfo("反応「#{input}→→#{output}」を学習した。" ) if @client
     end
   end
   

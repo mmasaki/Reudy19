@@ -47,21 +47,22 @@ end
 
 # 単語集
 class WordSet
-  include(Gimite)
+  include Gimite
   
-  include(Enumerable)
+  include Enumerable
   
   def initialize(innerFileName)
     @innerFileName = innerFileName
     @outerFileName = nil
     @innerFileTime = nil
-    @words = []
     @addedWords = []
     if File.exist?(@innerFileName)
       @innerFileTime = File.mtime(@innerFileName)
       Kernel.open(@innerFileName, "r") do |file|
         @words = Marshal.load(file)
       end
+    else
+      @words = []
     end
   end
   
@@ -81,26 +82,28 @@ class WordSet
         #data[1], data[2]はVer.3.04以前のデータを引き継ぐために使われる。
         next if str.empty?
         str.chomp!
-        warn (n+1).to_s + "語目..." if ((n+1) % 100).zero?
+        warn "#{n+1}語目..." if ((n+1) % 100).zero?
         if word = addWord(str)
-          warn "単語「" + word.str + "」を追加中..."
+          warn "単語「#{word.str}」を追加中..."
           wtmlManager.attachMsgList(word)
         end
         n += 1
       end
     end
     #initializeとupdateByOuterFileの間に追加された単語を外部ファイルに保存。
-    @addedWords = addedWords
+    @addedWords = addedWords 
     save
   end
   
   #単語を追加
   def addWord(str, author= "")
     word = Word.new(str, author)
-    i = 0
-    while i < @words.size
-      break if str.index(@words[i].str)
-      i+= 1
+    i = -1
+    @words.each_index do |j|
+      if str.include?(@words[j].str)
+        i = j
+        break
+      end
     end
     if @words[i] && @words[i].str == str
       return nil
@@ -119,7 +122,7 @@ class WordSet
           file.puts word.str
         end
       end
-      @addedWords = []
+      @addedWords.clear
     end
     Kernel.open(@innerFileName, "w") do |file|
       Marshal.dump(@words, file)

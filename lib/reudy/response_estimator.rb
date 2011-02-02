@@ -13,7 +13,7 @@ module Gimite
 
 #指定の発言への返事を推定する。
 class ResponseEstimator  
-  include(Gimite)
+  include Gimite
   
   def initialize(log, wordSearcher, msgFilter = proc{ |n| true }, wordFilter = proc{ |w| true })
     @cacheLimit = 40
@@ -37,7 +37,7 @@ class ResponseEstimator
     
     candMids = (mid+1..mid+numTargets).select{ |n| @msgFilter.call(n) }
     return [nil, 0] if candMids.empty?
-      #この先の判定は重いので、先に「絶対nilになるケース」を除外。
+    #この先の判定は重いので、先に「絶対nilになるケース」を除外。
     words = @wordSearcher.searchWords(@log[mid].body).select{ |w| @wordFilter.call(w) }
     resMid = nil
     

@@ -28,6 +28,7 @@
 #----------------------------------------------------------------------------
 #----------------------------------------------------------------------------
 # 文中から単語(らしき文字列)を探し出す
+
 class WordExtractor
   # コンストラクタ
   # WordExtractor(単語候補リストを保持する長さ,単語追加時のコールバック)
@@ -52,17 +53,15 @@ class WordExtractor
   # 主語っぽい語などの特例には適用しない
   # 不適だとnilを返す
   def wordFilter1(word)
-    return nil unless word # 論外(^_^;
+    return nil if !word || word.size == 1 #wordがnil又は一文字だけ
     case word
-    when /^.$/o # 一文字だけ
-      return nil
-    when /^[ぁ-んー]+$/o # 平仮名だけ
+    when /^[ぁ-んー]+$/o #平仮名だけ
       return nil
     when /[^ぁ-んー][^ぁ-ん]/o # 非ひらがなの2文字以上の連続を含まない
       return nil
     when /[^ぁ-ん][のとな]$/o # 助詞っぽいものを含む
       return nil
-    when /^.+が/o, /^.+は/o # 先頭以外に「が」「は」を含む
+    when /^.+(?:が|は)/o # 先頭以外に「が」「は」を含む
       return nil
     else 
       return word
@@ -73,9 +72,9 @@ class WordExtractor
   # 主語っぽいなどの特例にも適用する
   # 不適だとnilを返す
   def wordFilter2(word)
-    return nil unless word # 論外(^_^;
+    return nil if !word || word.empty? #wordがnil、又は空白
     case word
-    when /^$/o, /^[　 ]/o, /[　 ]$/o # 空白類
+    when /^[　 ]/o, /[　 ]$/o # 空白類
       return nil
     when /^[ぁ-んァ-ンー]$/o # かな一文字だけ
       return nil
@@ -83,9 +82,9 @@ class WordExtractor
       return nil
     when /^[-.\/+*:;,~_|&'"`()0-9]+$/o # 数値・記号だけ
       return nil
-    when /[、。．，！？（）・…‾−＿：；]/o,/[＜＞「」『』【】〔〕]/o,/[〜＃→←↑←⇔⇒◎—¬Д⌒]/o,/[()]/o # 記号を含む
+    when /(?:[、。．，！？（）・…‾−＿：；]|[＜＞「」『』【】〔〕]|[〜＃→←↑←⇔⇒◎—¬Д⌒]|[()])/o # 記号を含む
       return nil
-    when /^[,]/o,/^[ーをんぁぃぅぇぉゃゅょっ]/o,/^[ー−ヲンァィゥェォャュョッヶヵ]/o,/^[ぁ-ん][^ぁ-ん]/o # あり得ない文字から始まっている
+    when /^(?:[,]|[ーをんぁぃぅぇぉゃゅょっ]|[ー−ヲンァィゥェォャュョッヶヵ])/o,/^[ぁ-ん][^ぁ-ん]/o # あり得ない文字から始まっている
       return nil
     # HTMLの文字参照
     when /&[#a-zA-Z0-9]+;/o
@@ -105,11 +104,11 @@ class WordExtractor
     end
     word = word.dup
 
-    unless  ((prestr =~ /[、。．，！？（）・…]$/o || prestr == '') \
+    unless  ((prestr.empty? || prestr =~ /[、。．，！？（）・…]$/o) \
      && poststr =~ /^[はが]([^ぁ-ん]|$)/o \
-     &&((word + poststr[0..0]) !~ /(では|だが|には|のが)$/o) \
+     &&((word + poststr[0..0]) !~ /(?:では|だが|には|のが)$/o) \
      &&(word =~ /^[ぁ-んー]+$/o || word =~ /^[^ぁ-ん]/o) \
-     && word.size >= 3) || (prestr =~ /[＞＜]$/o && poststr == '')
+     && word.size >= 3) || (prestr =~ /[＞＜]$/o && poststr.empty?)
       word = wordFilter1(word)
     end
     return wordFilter2(word)
@@ -123,7 +122,7 @@ class WordExtractor
       word = $1
     end
     case word
-    when /^[ぁ-んァ-ンー]$/o,/^[ぁ-んー ][ぁ-んー－]$/o  # 禁則
+    when /^(?:[ぁ-んァ-ンー]|[ぁ-んー ][ぁ-んー－])$/o # 禁則
       return nil
     when /ない|って|った|てる|んな|いる|から|とは|れる|れて|れる|れた|ます|いう|れば|のは|しい|にな|んで|なる|しく|を|だと|たと|られ
         くて|のか|だけ|いた|えて|れが|いと|され|うが|える|ため|ある|こと|して|する|だよ|した|ので|しま|なの|です|なん|でき|とか
@@ -151,9 +150,9 @@ class WordExtractor
       result << cand if cand
     end
 
-    s_size = s.size
-    (0...s_size).each do |i| #それ以外
-      (i...s_size).each do |j|
+    s_size = s.size - 1
+    0.upto(s_size) do |i| #それ以外
+      i.upto(s_size) do |j|
         cand = checkWordCand(s[i..j],s[0...i],s[j+1..-1])
         result << cand if cand
       end
@@ -169,7 +168,7 @@ class WordExtractor
     wordcand_size = wordcand.size
     0.upto(wordcand_size-2) do |i|
       next unless wordcand[i]
-      (i+1).upto(wordcand_size) do |j|
+      (i+1).upto(wordcand_size-1) do |j|
         next unless wordcand[j]
         if wordcand[j].include?(wordcand[i])
           wordcand[i] = nil
@@ -223,9 +222,8 @@ class WordExtractor
 
   # 単語侯補のリストを更新する
   # (シングルバイト文字列の事前分離を行わないバージョン)
-  def renewCandList2(line)
-    abort "renewCandList2"
-  end
+#  def renewCandList2(line)
+#  end
 
   # 単語取得・単語候補リスト更新を1行分処理する
   def processLine(line)

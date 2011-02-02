@@ -9,7 +9,7 @@ require $REUDY_DIR+'/reudy_common'
 module Gimite
 #注目判定器。
 class AttentionDecider
-  include(Gimite)
+  include Gimite
   
   def initialize
     @lastNick = nil #最後の発言者。"!"なら、自分。
@@ -58,9 +58,9 @@ class AttentionDecider
   #沈黙がしばらく続いた時にこれを呼ぶ。発言率を返す。
   def onSilent
     updateRecentSpeakers(nil)
-    puts self.to_s
-    raiseProbability(-0.2) if @lastNick == "!"
+    puts self
     if @lastNick == "!"
+      raiseProbability(-0.2)
       return @ignoredProb
     elsif recentOtherSpeakers.size == 1
       return @calledProb
@@ -89,7 +89,9 @@ class AttentionDecider
   end
   
   def recentOtherSpeakers
-    return (@recentSpeakers - [nil, "!"]).uniq
+    t = @recentSpeakers - [nil, "!"]
+    t.uniq!
+    return t
   end
 end
 

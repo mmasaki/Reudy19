@@ -119,8 +119,7 @@ class IRCC
 
   # サーバから受け取ったメッセージを処理
   def on_recv(s)
-    s.chomp!("\n")
-    s.chomp!("\r")
+    s.chomp!
     # ここで変換してしまうと、internal_to_irc(irc_to_internal(s)) != s となるような
     # チャンネル名/nickなどで問題が起きる可能性がある。本来は元の文字コードでの
     # チャンネル名/nickもあわせて保持すべきだが、面倒なので放置。
@@ -274,7 +273,7 @@ class IRCC
 
   # 通常メッセージ受信時の処理
   def on_priv(type,nick,mess)
-    dispmess('<' + nick + '>',mess)
+    dispmess("<#{nick}>",mess)
   end
 
   # 今いるチャンネルの外からの通常メッセージ受信時の処理

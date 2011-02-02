@@ -4,11 +4,14 @@
 #日本語文字コード判定用コメント
 require $REUDY_DIR+'/wordset'
 
+KATAKANA = Regexp.compile("[ァ-ンー−][ァ-ンー−]") #カタカナ
+ALPHA_NUMERIC =  Regexp.compile("[a-zA-Z][a-zA-Z]") #英数
+
 module Gimite
 
 #文中から既知の単語を探す
 class WordSearcher
-  include(Gimite)
+  include Gimite
   
   def initialize(wordSet)
     @wordSet = wordSet
@@ -19,10 +22,10 @@ class WordSearcher
     return false if !sentence.include?(word.str) || !(sentence =~ Regexp.new("(.|^)" + Regexp.escape(word.str) + "(.|$)"))
     preChar = $1
     folChar = $2
-    wordAr = word.str.split(//)
+    wordAr = word.str
     #カタカナ列や英文字列を途中で切るような単語は不可
-    return false if (preChar+wordAr[0]) =~ /[ァ-ンー−][ァ-ンー−]/o || (preChar+wordAr[0]) =~ /[a-zA-Z][a-zA-Z]/o\
-                || (wordAr[-1]+folChar) =~ /[ァ-ンー−][ァ-ンー−]/o || (wordAr[-1]+folChar) =~ /[a-zA-Z][a-zA-Z]/o
+    return false if (preChar+wordAr[0]) =~ KATAKANA || (preChar+wordAr[0]) =~ ALPHA_NUMERIC\
+                || (wordAr[-1]+folChar) =~ KATAKANA || (wordAr[-1]+folChar) =~ ALPHA_NUMERIC
     return true
   end
   
