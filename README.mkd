@@ -26,6 +26,7 @@ Ruby1.8では動作しません。
 twitter_reudy.rbというTwitter用インターフェースを追加しています。   
 動作にはrubytterとhighlineが必要です   
 >gem install rubytter highline   
+  
 でインストールして下さい。   
    
 http://dev.twitter.com/apps/new から新しいアプリを作成して、取得したConsumer key,secretを　  
@@ -38,6 +39,7 @@ twitter_reudy.rbに記入して使って下さい。初回にアクセストー�
 Lingrの仕様変更に対応しました。  
 動作にはSinatraが必要です。  
 >gem install sinatra  
+  
 でインストールして下さい。  
   
 デフォルトではWEBrickが4567番ポートで動作するはずです。  
