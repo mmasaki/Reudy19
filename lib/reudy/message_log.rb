@@ -18,7 +18,7 @@ end
 
 #発言ログ
 class MessageLog
-  include(Gimite)
+  include Gimite
   
   @enable_update_check = true
   class << self

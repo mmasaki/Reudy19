@@ -90,16 +90,16 @@ class IRCC
   # メッセージの送信(通常のPRIVMSGで)
   def sendpriv(mess)
     mess = '' unless mess
-    dispmess('>' + @irc_nick + '<',mess)
-    buff = 'PRIVMSG ' + @irc_channel + ' :' + mess
+    dispmess(">#{@irc_nick}<",mess)
+    buff = "PRIVMSG #{@irc_channel} :#{mess}"
     sendmess(buff + "\r\n")
   end
 
   # メッセージの送信(NOTICEで)
   def sendnotice(mess)
     mess = '' unless mess
-    dispmess('>' + @irc_nick + '<',mess)
-    buff = 'NOTICE ' + @irc_channel + ' :' + mess
+    dispmess(">#{@irc_nick}<",mess)
+    buff = "NOTICE #{@irc_channel} :#{mess}"
     sendmess(buff + "\r\n")
   end
 
@@ -108,13 +108,13 @@ class IRCC
     old_channel = @irc_channel
     setchannel(channel)
       #PARTの前にこれを書き換えておかないとQUITしてしまう
-    sendmess('PART ' + old_channel + "\r\n")
-    sendmess('JOIN ' + @irc_channel + " " + @channel_key + "\r\n")
+    sendmess("PART #{old_channel}\r\n")
+    sendmess("JOIN #{@irc_channel} #{@channel_key}\r\n")
   end
 
   # 終了する(実際にはチャンネルを抜けている)
   def quit
-    sendmess('PART ' + @irc_channel + "\r\n")
+    sendmess("PART #{@irc_channel}\r\n")
   end
 
   # サーバから受け取ったメッセージを処理
@@ -185,53 +185,45 @@ class IRCC
       channel = param[1]
       nick = param[2]
       mess = param[3]||''
-
       if nick == @irc_nick
         if param[1].downcase == @irc_channel.downcase
           @nicklist = []
           @joined_channel=nil
         end
         on_mykick(channel,mess,kicker)
-        # 蹴られたのでQUIT
-        sendmess("QUIT\r\n") if param[1].downcase == @irc_channel.downcase
+        sendmess("QUIT\r\n") if param[1].downcase == @irc_channel.downcase # 蹴られたのでQUIT
       else
         @nicklist.delete(nick)
         on_kick(nick,channel,mess,kicker)
       end
     when 'NICK'     # 誰かがNICKを変更した
       nick_new = param[1]
-
       @irc_nick = nick_new if nick == @irc_nick
-
       @nicklist.delete(nick)
       @nicklist |= [nick_new]
-
       on_nick(nick,nick_new)
     when 'INVITE'     # 誰かが自分を招待した
-      if param[1] == @irc_nick
-        on_myinvite(nick,param[-1])
-      end
+      on_myinvite(nick,param[-1]) if param[1] == @irc_nick
     when 'PING'     # クライアントの生存確認
       if @myhostname
-        sendmess('PONG ' + @myhostname + ' ' + param[1] + "\r\n")
+        sendmess("PONG #{@myhostname} #{param[1]}\r\n")
       else
         # UltimateIRCdではMOTDより前にPINGが来る
         # 正確なクライアントのホスト名が不明なため、適当なPONGを返す
-        sendmess('PONG dummy ' + param[1] + "\r\n")
+        sendmess("PONG dummy #{param[1]}\r\n")
       end
     when '376','422'    # MOTDの終わり=ログインシーケンスの終わり
       # 自分のprefixを確認するためWHOISを発行
-      sendmess('WHOIS ' + @irc_nick + "\r\n")
+      sendmess("WHOIS #{@irc_nick}\r\n")
     when '311'      # WHOISへの応答
       unless @myprefix
         # 自分のprefixを取得
         @myhostname = param[4]
-        @myprefix = param[3] + '@' + @myhostname
+        @myprefix = "#{param[3]}@#{@myhostname}"
         on_login
       end
     when '433'      # nickが重複した
-      on_error('433')
-      # 正しくは重複しないnickで再度NICKを発行
+      on_error('433')  # 正しくは重複しないnickで再度NICKを発行
     when '451'      # 認証されていない
       on_error('451')
       @disp.puts('unknown login sequence!!') if DEBUG
@@ -244,10 +236,10 @@ class IRCC
     dispmess(nil,'Login...')
 
     if @userinfo['pass'] && !@userinfo['pass'].empty?
-      sendmess('PASS ' + @userinfo['pass'] + "\r\n")
+      sendmess("PASS #{@userinfo['pass']}\r\n")
     end
-    sendmess('NICK ' + @irc_nick + "\r\n")
-    sendmess('USER ' + @userinfo['user'] + ' 0 * :' + @userinfo['realname'] + "\r\n")
+    sendmess("NICK #{@irc_nick}\r\n")
+    sendmess("USER #{@userinfo['user']} 0 * :#{@userinfo['realname']}\r\n")
   end
 
   # ここから下はオーバーライドする事を想定している
@@ -255,15 +247,18 @@ class IRCC
   # メッセージを表示(文字コードは変換しない)
   def dispmess(nick,mess)
     buff = Time.now.strftime('%H:%M:%S ')
-    buff = buff + nick + ' ' if nick
-    buff = buff + mess
+    if nick
+      buff = "#{buff}#{nick} #{mess}"
+    else
+      buff = "#{buff}#{mess}"
+    end
     @disp.puts(buff)
     @disp.flush
   end
 
   # 接続・認証が完了し、チャンネルにJOINできる
   def on_login
-    sendmess('JOIN ' + @irc_channel + " " + @channel_key + "\r\n")
+    sendmess("JOIN #{@irc_channel} #{@channel_key}\r\n")
   end
 
   # MOTD(サーバのログインメッセージ)
@@ -282,22 +277,22 @@ class IRCC
 
   # JOIN受信時の処理
   def on_join(nick,channel)
-    dispmess(nick,'JOIN ' + channel)
+    dispmess(nick,"JOIN #{channel}")
   end
 
   # PART受信時の処理
   def on_part(nick,channel)
-    dispmess(nick,'PART ' + channel)
+    dispmess(nick,"PART #{channel}")
   end
 
   # QUIT受信時の処理
   def on_quit(nick,mess)
-    dispmess(nick,'QUIT ' + mess)
+    dispmess(nick,"QUIT #{mess}")
   end
 
   # KICK受信時の処理
   def on_kick(nick,channel,mess,kicker)
-    dispmess(nick,'KICK ' + channel + ' ' + kicker + ' ' + mess)
+    dispmess(nick,"KICK #{channel} #{kicker} #{mess}")
   end
 
   # 自分のJOIN受信時の処理
@@ -322,17 +317,17 @@ class IRCC
 
   # NICK受信時の処理
   def on_nick(nick_old,nick_new)
-    dispmess(nick_old,'NICK ' + nick_new)
+    dispmess(nick_old,"NICK #{nick_new}")
   end
 
   # 自分がINVITEされた時の処理
   def on_myinvite(nick,channel)
-    dispmess(nick,'INVITE ' + channel)
+    dispmess(nick,"INVITE #{channel}")
   end
   
   # エラーの時の処理
   def on_error(code)
-    @disp.puts("Error: " + code)
+    @disp.puts("Error: #{code}")
     sendmess("QUIT\r\n")  # 面倒なので終了にしている
   end
 end

@@ -57,7 +57,7 @@ class ResponseEstimator
     end
     prob = resMid ? numTargets : 0 #同じ単語を含む方が、返事らしさが高い。
     resMid = candMids[0] unless resMid
-    prob += numTargets + 1 -(resMid-mid) #近い発言の方が、返事らしさが高い。
+    prob += numTargets + 1 - (resMid-mid) #近い発言の方が、返事らしさが高い。
     
     #キャッシュしておく。
     @cache.clear if @cache.size >= @cacheLimit

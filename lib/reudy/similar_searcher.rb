@@ -47,12 +47,12 @@ class SimilarSearcher
     return if ws.size <= 1
     if ws.size >= @compLen
       wtail = ws[-@compLen..-1]#文尾。
-      randomEach(@tailMap[wtail.join], &block)
+      randomEach(@tailMap[wtail], &block)
       0.upto(@compLen-1) do |i|
-        randomEach(@tailMap[(wtail[0...i]+wtail[i+1..-1]).join], &block) #途中を1文字抜かしたもの。
+        randomEach(@tailMap[wtail[0...i]+wtail[i+1..-1]], &block) #途中を1文字抜かしたもの。
       end
     else
-      randomEach(@tailMap[ws.join], &block)
+      randomEach(@tailMap[ws], &block)
     end
   end
   
@@ -69,7 +69,7 @@ class SimilarSearcher
   
   #発言が追加された。
   def onAddMsg
-    recordTail(@log.size-1)
+    recordTail(-1)
   end
   
   #ログがクリアされた。
@@ -87,9 +87,9 @@ class SimilarSearcher
       @tailMap = {}
     end
     if @tailMap.empty?
-      warn "文尾辞書( "+fileName+" )を作成中..."
+      warn "文尾辞書( #{fileName})を作成中..."
       0.upto(@log.size-1) do |i|
-        warn (i+1).to_s + "行目..." if (i+1) % 1000 == 0
+        warn "#{i+1}行目..." if ((i+1) % 1000).zero?
         recordTail(i)
       end
     end
@@ -111,8 +111,7 @@ class SimilarSearcher
   end
   
   #@tailMapに追加。
-  def addToTailMap(wtail, lineN)
-    tail = wtail.join
+  def addToTailMap(tail, lineN)
     lineNs = @tailMap[tail]
     if lineNs
       @tailMap[tail] = lineNs+[lineN]
@@ -127,7 +126,7 @@ class SimilarSearcher
     s.gsub!(/？/, "?")
     s.gsub!(/！/,"!")
     s.gsub!(/[ー−+]/, "ー")
-    return s.split(//)
+    return s
   end
 end
 

@@ -70,21 +70,21 @@ class Reudy
   
   #設定をファイルからロード
   def loadSettings
-    file = Kernel.open(@settingPath)
-    @settings = {}
-    file.each_line do |line|
-      line.chomp!
-      if line =~ /^\s*(\S+)(\s.*)?$/o
-        @settings[$1] = $2 ? $2.strip : ""
+    Kernel.open(@settingPath) do |file|
+      @settings = {}
+      file.each_line do |line|
+        line.chomp!
+        if line =~ /^\s*(\S+)(\s.*)?$/o
+          @settings[$1] = $2 ? $2.strip : ""
+        end
       end
     end
-    file.close
     @fixedSettings.each do |key, val|
       @settings[key] = val
     end
     #メンバ変数を更新
     @targetNickReg = Regexp.new(@settings["target_nick"] || "", Regexp::IGNORECASE)
-      #これにマッチしないNickの発言は、ベース発言として使用不能
+    #これにマッチしないNickの発言は、ベース発言として使用不能
     s = @settings["forbidden_nick"]
     s = "(?!.*)" if !s || s.empty?
       #何にもマッチしない正規表現のつもり
@@ -195,7 +195,7 @@ class Reudy
     #最近そのベース発言を使った。
     if (settings("teacher_mode") != "true" && size > @recentUnusedCt && msgN >= size - @recentUnusedCt)\
         || nick == "!"\
-        || (!(nick =~ @targetNickReg)|| nick =~ @forbiddenNickReg)\
+        || (!(nick =~ @targetNickReg) || nick =~ @forbiddenNickReg)\
         || @recentBaseMsgNs.include?(msgN)
       return false 
     else 
@@ -272,12 +272,12 @@ class Reudy
   #ブロックは発言番号を引数に取る。
   #発言の順序はランダム。
   def eachMsgContainingWords(inputWords, &block)
-    words = inputWords.clone
+    words = inputWords.dup
     words_size = words.size
     until words.empty?
       word = words.delete_at(rand(words_size))
       words_size -= 1
-      msgNs = word.msgNs.clone
+      msgNs = word.msgNs.dup
       msgNs_size = msgNs.size
       until msgNs.empty?
         block.call(msgNs.delete_at(rand(msgNs_size)))
@@ -360,29 +360,32 @@ class Reudy
       end
     end
     #先頭から2番目以降の単語の直前でカットしたりしなかったり。
-    if parts_size = parts.size > 1
-      wordCt =  (parts_size-1) / 2
+    parts_size = parts.size
+    wordCt =  (parts_size-1) / 2
+    if parts_size > 1
       cutPos = rand(wordCt) * 2 + 1
       parts = [""]+parts[cutPos..-1] if cutPos > 1
     end
     #単語を除いた文章が短すぎるものはある確率で却下。
-    if wordCt.nonzero? && !toForce
+    if wordCt != 0 && !toForce
       len = sigma(0...parts.size){ |i| (i % 2).zero? ? parts[i].size : 0 }
       return nil unless shouldAdoptSaying(len)
     end
     #単語を置換。
-    newWords = newWords.clone
-    newWords_size = newWords.size
-    until newWords.empty?
-      oldWordStr = parts[rand(wordCt)*2+1]
-      newWordStr = newWords.delete_at(rand(newWords_size)).str
-      newWords_size -= 1
-      0.upto(wordCt-1) do |i|
-        parts[i*2+1] = newWordStr if parts[i*2+1] == oldWordStr
+    unless newWords.empty?
+      newWords = newWords.dup
+      newWords_size = newWords.size
+      until newWords.empty?
+        oldWordStr = parts[rand(wordCt)*2+1]
+        newWordStr = newWords.delete_at(rand(newWords_size)).str
+        newWords_size -= 1
+        0.upto(wordCt-1) do |i|
+          parts[i*2+1] = newWordStr if parts[i*2+1] == oldWordStr
+        end
+        break if rand < 0.5
       end
-      break if rand < 0.5
     end
-    output = parts.join("")
+    output = parts.join
     #閉じ括弧が残った場合に開き括弧を補う。
     #入れ子になってたりしたら知らない。
     case output
@@ -501,7 +504,7 @@ class Reudy
     when /([\x21-\x7e]+)の(もの|モノ|物)(まね|真似)/o
       begin
         @targetNickReg = Regexp.new($1, Regexp::IGNORECASE)
-        return $1 + "のものまねを開始する。"
+        return "#{$1}のものまねを開始する。"
       rescue RegexpError
         return "正規表現が間違っている。"
       end
@@ -515,9 +518,9 @@ class Reudy
       if wordIdx
         author = @wordSet.words[wordIdx].author
         if !author.empty?
-          return author + "さんに。＞" + wordStr
+          return "#{author}さんに。＞#{wordStr}"
         else
-          return "不確定だ。＞" + wordStr
+          return "不確定だ。＞#{wordStr}"
         end
       else
         return "その単語は記憶していない。"
@@ -544,7 +547,7 @@ class Reudy
   
   #ログに発言が追加された。
   def onAddMsg
-    msg = @log[-1]
+    msg = @log[@log.size-1]
     @fromNick = msg.fromNick unless msg.fromNick == "!"
     unless settings("teacher_mode") == "true"
       #中の人モードでは、単語の抽出は別にやる。
@@ -562,9 +565,9 @@ class Reudy
   def onAddWord(wordStr)
     if @wordSet.addWord(wordStr, @fromNick)
       if @client
-        @client.outputInfo("単語「" + wordStr + "」を記憶した。")
+        @client.outputInfo("単語「#{wordStr}」を記憶した。")
       else
-        puts "単語「" + wordStr + "」を記憶した。"
+        puts "単語「#{wordStr}」を記憶した。"
       end
       @wordSet.save if @autoSave
     end

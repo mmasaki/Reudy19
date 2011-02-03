@@ -38,7 +38,7 @@ class WordExtractor
     @onAddWord = onaddword
   end
 
-  def candList; @candList; end
+  attr_accessor :candList
 
   # 単語候補のリストを整理して返す
   def getCandList
@@ -55,13 +55,10 @@ class WordExtractor
   def wordFilter1(word)
     return nil if !word || word.size == 1 #wordがnil又は一文字だけ
     case word
-    when /^[ぁ-んー]+$/o #平仮名だけ
-      return nil
-    when /[^ぁ-んー][^ぁ-ん]/o # 非ひらがなの2文字以上の連続を含まない
-      return nil
-    when /[^ぁ-ん][のとな]$/o # 助詞っぽいものを含む
-      return nil
-    when /^.+(?:が|は)/o # 先頭以外に「が」「は」を含む
+    when /^[ぁ-んー]+$/o,#平仮名だけ
+         /[^ぁ-んー][^ぁ-ん]/o,# 非ひらがなの2文字以上の連続を含まない
+         /[^ぁ-ん][のとな]$/o,# 助詞っぽいものを含む
+         /^.+(?:が|は)/o# 先頭以外に「が」「は」を含む
       return nil
     else 
       return word
@@ -74,20 +71,12 @@ class WordExtractor
   def wordFilter2(word)
     return nil if !word || word.empty? #wordがnil、又は空白
     case word
-    when /^[　 ]/o, /[　 ]$/o # 空白類
-      return nil
-    when /^[ぁ-んァ-ンー]$/o # かな一文字だけ
-      return nil
-    when /^[ぁ-んー−][ぁ-んー−]$/o   # ひらがな2文字
-      return nil
-    when /^[-.\/+*:;,~_|&'"`()0-9]+$/o # 数値・記号だけ
-      return nil
-    when /(?:[、。．，！？（）・…‾−＿：；]|[＜＞「」『』【】〔〕]|[〜＃→←↑←⇔⇒◎—¬Д⌒]|[()])/o # 記号を含む
-      return nil
-    when /^(?:[,]|[ーをんぁぃぅぇぉゃゅょっ]|[ー−ヲンァィゥェォャュョッヶヵ])/o,/^[ぁ-ん][^ぁ-ん]/o # あり得ない文字から始まっている
-      return nil
-    # HTMLの文字参照
-    when /&[#a-zA-Z0-9]+;/o
+    when /^[　 ]/o, /[　 ]$/o,# 空白類
+         /^[ぁ-んァ-ンー]$/o,/^[ぁ-んー−][ぁ-んー−]$/o,# かな一文字だけ、ひらがな2文字
+         /^[-.\/+*:;,~_|&'"`()0-9]+$/o,# 数値・記号だけ
+         /(?:[、。．，！？（）・…‾−＿：；]|[＜＞「」『』【】〔〕]|[〜＃→←↑←⇔⇒◎—¬Д⌒]|[()])/o,# 記号を含む
+         /^(?:[,]|[ーをんぁぃぅぇぉゃゅょっ]|[ー−ヲンァィゥェォャュョッヶヵ])/o,/^[ぁ-ん][^ぁ-ん]/o,# あり得ない文字から始まっている
+         /&[#a-zA-Z0-9]+;/o # HTMLの文字参照
       return nil
     else
       return word
@@ -104,11 +93,9 @@ class WordExtractor
     end
     word = word.dup
 
-    unless  ((prestr.empty? || prestr =~ /[、。．，！？（）・…]$/o) \
-     && poststr =~ /^[はが]([^ぁ-ん]|$)/o \
-     &&((word + poststr[0..0]) !~ /(?:では|だが|には|のが)$/o) \
-     &&(word =~ /^[ぁ-んー]+$/o || word =~ /^[^ぁ-ん]/o) \
-     && word.size >= 3) || (prestr =~ /[＞＜]$/o && poststr.empty?)
+    unless  ((prestr.empty? || prestr =~ /[、。．，！？（）・…]$/o) && poststr =~ /^[はが]([^ぁ-ん]|$)/o \
+            &&((word + poststr[0..0]) !~ /(?:では|だが|には|のが)$/o) &&(word =~ /^[ぁ-んー]+$/o || word =~ /^[^ぁ-ん]/o) \
+            && word.size >= 3) || (prestr =~ /[＞＜]$/o && poststr.empty?)
       word = wordFilter1(word)
     end
     return wordFilter2(word)
@@ -122,9 +109,8 @@ class WordExtractor
       word = $1
     end
     case word
-    when /^(?:[ぁ-んァ-ンー]|[ぁ-んー ][ぁ-んー－])$/o # 禁則
-      return nil
-    when /ない|って|った|てる|んな|いる|から|とは|れる|れて|れる|れた|ます|いう|れば|のは|しい|にな|んで|なる|しく|を|だと|たと|られ
+    when /^(?:[ぁ-んァ-ンー]|[ぁ-んー ][ぁ-んー－])$/o,# 禁則
+         /ない|って|った|てる|んな|いる|から|とは|れる|れて|れる|れた|ます|いう|れば|のは|しい|にな|んで|なる|しく|を|だと|たと|られ
         くて|のか|だけ|いた|えて|れが|いと|され|うが|える|ため|ある|こと|して|する|だよ|した|ので|しま|なの|です|なん|でき|とか
         ような|だろう/o,/[^ぁ-ん][でにを]/o,/っ$/o #単語候補時に除外されてるはずだが、語末のゴミの除去で現れた可能性が有るのでもう1度
       return nil
@@ -137,14 +123,14 @@ class WordExtractor
   # 主にマルチバイト文字列(日本語文字列)用だが、
   # 一応シングルバイト文字列を食わせても大丈夫なはず
   def extractCands(s)
-    result = []
-
     a = s.scan(/[-_0-9a-zA-Z]+/) #文字列から英数字の連続を取り除き、配列に格納する
     a += s.scan(/[ー−ァ-ン]+/) #カタカナに対して同様に
+    
     a.each do |t|
       s.delete!(t)
     end
 
+    result = []
     a.each do |str| #英数字、カタカナの連続はそのままcheckWordCandにかける
       cand = checkWordCand(str)
       result << cand if cand
@@ -157,18 +143,16 @@ class WordExtractor
         result << cand if cand
       end
     end
-#    dprint("単語候補", result)
 
     return result
   end
 
-
   # 単語リスト中の包含関係にあるものを削除して単語リストを最適化する
   def optimizeWordList(wordcand)
-    wordcand_size = wordcand.size
-    0.upto(wordcand_size-2) do |i|
+    wordcand_size = wordcand.size - 1
+    0.upto(wordcand_size-1) do |i|
       next unless wordcand[i]
-      (i+1).upto(wordcand_size-1) do |j|
+      (i+1).upto(wordcand_size) do |j|
         next unless wordcand[j]
         if wordcand[j].include?(wordcand[i])
           wordcand[i] = nil
@@ -177,39 +161,31 @@ class WordExtractor
         wordcand[j] = nil if wordcand[i].include?(wordcand[j])
       end
     end
-    wordcand.compact!
-
-    return wordcand
+    return wordcand.compact
   end
 
   # 文中で使われている単語を取得
   def extractWords(line,words=[])
-
-    # 単語侯補が文章中に使われてたら単語にする
-    wordcand = getCandList.select {|word| line.include?(word)}
+    wordcand = getCandList.select {|word| line.include?(word)} # 単語侯補が文章中に使われてたら単語にする
     # 新しく加わる単語同士に包含関係があったら短いほうを消去する
-    ## 例えば「なると」という単語が登録される時に
-    ## 「なる」「ると」が同時に単語と認識されてしまうのを防ぐ。
+    # 例えば「なると」という単語が登録される時に
+    # 「なる」「ると」が同時に単語と認識されてしまうのを防ぐ。
     wordcand = optimizeWordList(wordcand) unless wordcand.empty?
     
     # 禁則処理
     wordcand2 = []
     wordcand.each do |word|
       word2 = checkWord(word)
-      wordcand2.push(word2) if word2
+      wordcand2 << word2 if word2
     end
     
-    # 新しい単語を本当に単語として認定する。
-    ## ただしダブる場合は片方を消す。
-    words = words | wordcand2
+    words = words | wordcand2 # 新しい単語を本当に単語として認定する。ただしダブる場合は片方を消す。
  
     if @onAddWord
       words.each do |w|
         @onAddWord.call(w)
       end
     end
-
-#    dprint("単語", words)
 
     return words
   end
@@ -220,11 +196,6 @@ class WordExtractor
     @candList << extractCands(line)
   end
 
-  # 単語侯補のリストを更新する
-  # (シングルバイト文字列の事前分離を行わないバージョン)
-#  def renewCandList2(line)
-#  end
-
   # 単語取得・単語候補リスト更新を1行分処理する
   def processLine(line)
     words = extractWords(line)
@@ -234,6 +205,6 @@ class WordExtractor
 
   #デバッグ出力
   def dprint(caption, obj)
-    print(caption + ": " + obj.inspect, "\n")
+    puts "#{caption} : #{obj.inspect}"
   end
 end
