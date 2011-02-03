@@ -2,9 +2,9 @@
 #日本語文字コード判定用コメント
 
 $REUDY_DIR= "./lib/reudy" unless defined?($REUDY_DIR) #スクリプトがあるディレクトリ
-CONSUMER = { #get it in http://twitter.com/oauth_client/new
-      :key => "KEY",
-      :secret => "SECRET"
+CONSUMER = { #http://twitter.com/oauth_client/newからアプリを作成して下さい
+      :key => "取得したConsumer keyをここに入力して下さい",
+      :secret => "取得したConsumer secretをここに入力して下さい"
       }
 
 trap(:INT){ exit }

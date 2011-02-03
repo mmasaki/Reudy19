@@ -6,7 +6,8 @@
 
 ## 説明
 
-東京工業大学 ロボット技術研究会の市川 宙(Gimite)さんが中心となって作成した日本語人工無能ロイディを、Ruby1.9でも動作するようにしたものです。
+東京工業大学 ロボット技術研究会の市川 宙(Gimite)さんが中心となって作成した日本語人工無能ロイディを、Ruby1.9で動作するようにしたものです。
+Ruby1.8では動作しません。
 
 ## 改変の内容
 
@@ -18,8 +19,26 @@
 ### DBM周りの変更
 
 本家ロイディは文尾辞書の保持にRuby/GDBMを使用していましたが、PStoreをデフォルトにするようにしました。
-また、[],[]=などの数個のメソッドを定義したrbファイルを作成して lib/reudy/以下に置くだけで利用出来るDBMを簡単に追加できるようになっています。
+また、[],[]=などの数個のメソッドを定義したrbファイルを作成して lib/reudy/以下に置くだけで、利用出来るDBMを簡単に追加できるようになっています。
 
 ### Twitter用インターフェースの追加
 
-twitter_reudy.rbという名前でTwitter用インターフェースを追加しています。
+twitter_reudy.rbというTwitter用インターフェースを追加しています。 
+動作にはrubytterとhighlineが必要です 
+>gem install rubytter highline 
+でインストールして下さい。 
+ 
+http://dev.twitter.com/apps/new から新しいアプリを作成して、取得したConsumer key,secretを　
+twitter_reudy.rbに記入して使って下さい。初回にアクセストークンを取得する為のURLが示されるので、
+そのURLにアクセスしてAllowをクリックし、表示された番号(PIN)を入力して下さい。
+アクセストークンはtwitter_reudy.rbと同じフォルダに「token」というファイル名で保存されます。
+
+### Lingr用インターフェースの更新
+
+Lingrの仕様変更に対応しました。
+動作にはSinatraが必要です。
+>gem install sinatra
+でインストールして下さい。
+
+デフォルトではWEBrickが4567番ポートで動作するはずです。
+Lingrにアクセスし、SettingsのBotsからcreate a new botをクリックして、Callback URLにWEBrickへ到達可能なURLを指定して下さい。
