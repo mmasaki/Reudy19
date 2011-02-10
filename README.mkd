@@ -46,7 +46,7 @@ Lingrにアクセスし、SettingsのBotsからcreate a new botをクリック�
 
 ### DBM周りの変更
 
-本家ロイディは文尾辞書の保持にRuby/GDBMを使用していましたが、PStoreをデフォルトのDBMとしました。
+本家ロイディは文尾辞書の保持にRuby/GDBMを使用していましたが、PStoreをデフォルトのDBMとしました。<br>
 また、[],[]=などの数個のメソッドを定義したrbファイルを作成して lib/reudy/以下に置くだけで、利用出来るDBMを簡単に追加できるようになっています。
 
 ### Twitter用インターフェースの追加
