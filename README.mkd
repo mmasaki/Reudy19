@@ -7,40 +7,61 @@
 ## 説明
 
 東京工業大学 ロボット技術研究会の市川 宙(Gimite)さんが中心となって作成した日本語人工無脳ロイディを、Ruby1.9で動作するようにしたものです。  
-Ruby1.8では動作しません。  
+Ruby1.8では動作しません。
+
+## 使い方
+
+### IRCボットとして使う場合
+publicフォルダにあるsetting.ymlを編集してから  
+>ruby irc_reudy.rb  
+でIRCクライアントが立ち上がります。
+　
+### Twitterボットとして使う場合
+動作にはrubytterとhighlineが必要です
+>gem install rubytter highline
+
+でインストールして下さい。
+
+http://dev.twitter.com/apps/new から新しいアプリを作成して、取得したConsumer key/secretを　
+twitter_reudy.rbに記入して使って下さい。初回にアクセストークンを取得する為のURLが示されるので、
+そのURLにアクセスしてAllowをクリックし、表示された番号(PIN)を入力して下さい。
+アクセストークンはtwitter_reudy.rbと同じフォルダに「token」というファイル名で保存されます。
+
+### Lingrボットとして使う場合
+動作にはSinatraが必要です。
+>gem install sinatra
+
+でインストールして下さい。
+
+デフォルトではWEBrickが4567番ポートで動作するはずです。
+Lingrにアクセスし、SettingsのBotsからcreate a new botをクリックして、Callback URLにWEBrickへ到達可能なURLを指定して下さい。
+
 
 ## 改変の内容
 
 ### コード
 
 ソースコードをできる限り[Rubyコーディング規約](http://shugo.net/ruby-codeconv/codeconv.html)に沿うように改変しました。  
-また、後置修飾やelseのないif !hoge?などをunless hoge?に変えたり、forで書かれた部分をeachに変えたりもしています。
 
 ### DBM周りの変更
 
-本家ロイディは文尾辞書の保持にRuby/GDBMを使用していましたが、PStoreをデフォルトにするようにしました。  
+本家ロイディは文尾辞書の保持にRuby/GDBMを使用していましたが、PStoreをデフォルトのDBMとしました。
 また、[],[]=などの数個のメソッドを定義したrbファイルを作成して lib/reudy/以下に置くだけで、利用出来るDBMを簡単に追加できるようになっています。
 
 ### Twitter用インターフェースの追加
 
 twitter_reudy.rbというTwitter用インターフェースを追加しています。   
-動作にはrubytterとhighlineが必要です   
->gem install rubytter highline   
-  
-でインストールして下さい。   
-   
-http://dev.twitter.com/apps/new から新しいアプリを作成して、取得したConsumer key,secretを　  
-twitter_reudy.rbに記入して使って下さい。初回にアクセストークンを取得する為のURLが示されるので、  
-そのURLにアクセスしてAllowをクリックし、表示された番号(PIN)を入力して下さい。  
-アクセストークンはtwitter_reudy.rbと同じフォルダに「token」というファイル名で保存されます。  
-  
+
 ### Lingr用インターフェースの更新
   
 Lingrの仕様変更に対応しました。  
-動作にはSinatraが必要です。  
->gem install sinatra  
   
-でインストールして下さい。  
-  
-デフォルトではWEBrickが4567番ポートで動作するはずです。  
-Lingrにアクセスし、SettingsのBotsからcreate a new botをクリックして、Callback URLにWEBrickへ到達可能なURLを指定して下さい。  
+### コマンドラインオプションの解釈
+コマンドラインオプションのパースにOptionParserを使うようになりました。  
+
+### 単語の抽出にMeCabを使えるように
+単語の抽出に形態素解析エンジン[MeCab](http://mecab.sourceforge.net/)を利用できるようになりました。  
+デフォルトでは本家ロイディと同じく正規表現によって単語の抽出を試みますが、コマンドラインオプション-m又は--mecabを付けて起動すると　　
+単語の抽出にMeCabを使用します。  　
+　　
+MeCabを使用する為にはMeCabとMeCabから利用可能な辞書、MeCabのRuby用バインディングmecab-rubyが必要です。  
