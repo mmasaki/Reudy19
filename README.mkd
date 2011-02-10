@@ -14,6 +14,7 @@ Ruby1.8では動作しません。
 ### IRCボットとして使う場合
 publicフォルダにあるsetting.ymlを編集してから  
 >ruby irc_reudy.rb   
+  
 でIRCクライアントが立ち上がります。
 　
 ### Twitterボットとして使う場合
