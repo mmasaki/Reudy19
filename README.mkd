@@ -23,19 +23,19 @@ publicフォルダにあるsetting.ymlを編集してから
 
 でインストールして下さい。
 
-http://dev.twitter.com/apps/new から新しいアプリを作成して、取得したConsumer key/secretを　
-twitter_reudy.rbに記入して使って下さい。初回にアクセストークンを取得する為のURLが示されるので、
-そのURLにアクセスしてAllowをクリックし、表示された番号(PIN)を入力して下さい。
-アクセストークンはtwitter_reudy.rbと同じフォルダに「token」というファイル名で保存されます。
-
+http://dev.twitter.com/apps/new から新しいアプリを作成して、取得したConsumer key/secretを  
+twitter_reudy.rbに記入して使って下さい。初回にアクセストークンを取得する為のURLが示されるので、 
+そのURLにアクセスしてAllowをクリックし、表示された番号(PIN)を入力して下さい。  
+アクセストークンはtwitter_reudy.rbと同じフォルダに「token」というファイル名で保存されます。 
+  
 ### Lingrボットとして使う場合
-動作にはSinatraが必要です。
+動作にはSinatraが必要です。 
 >gem install sinatra
 
-でインストールして下さい。
+でインストールして下さい。 
 
-デフォルトではWEBrickが4567番ポートで動作するはずです。
-Lingrにアクセスし、SettingsのBotsからcreate a new botをクリックして、Callback URLにWEBrickへ到達可能なURLを指定して下さい。
+デフォルトではWEBrickが4567番ポートで動作するはずです。 
+Lingrにアクセスし、SettingsのBotsからcreate a new botをクリックして、Callback URLにWEBrickへ到達可能なURLを指定して下さい。 
 
 
 ## 改変の内容
