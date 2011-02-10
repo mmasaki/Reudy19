@@ -1,8 +1,5 @@
 #encoding:utf-8
 #Copyright (C) 2003 Gimite 市川 <gimite@mx12.freecom.ne.jp>
-
-#日本語文字コード判定用コメント
-require $REUDY_DIR+'/tango-mgm'
 require $REUDY_DIR+'/wordset'
 require $REUDY_DIR+'/word_searcher'
 require $REUDY_DIR+'/message_log'
@@ -13,25 +10,29 @@ require $REUDY_DIR+'/attention_decider'
 require $REUDY_DIR+'/response_estimator'
 require $REUDY_DIR+'/version'
 require $REUDY_DIR+'/reudy_common'
+require 'yaml/store'
 
 module Gimite
 
-#人工無能ロイディ
 class Reudy
   include Gimite
   
-  def initialize(dir, fixedSettings = {},db="pstore")
+  def initialize(dir, fixedSettings = {},db="pstore",mecab=nil)
     @attention = nil
-    
-    #バージョンアップチェック。必要なら、データを新しい形式に変換。
-    ReudyVersion.new.checkDataVersion(dir)
-    
+    ReudyVersion.new.checkDataVersion(dir) #バージョンアップチェック。必要なら、データを新しい形式に変換。
+     
     #設定を読み込む。
-    @db = db
+    @db = db #使用するDBの名前
+    if mecab #コマンドラインオプション-m,--mecabがあれば単語の抽出にmecabを使用する
+      require $REUDY_DIR+'/tango-mecab'
+    else
+      require $REUDY_DIR+'/tango-mgm'
+    end
     @fixedSettings = fixedSettings
-    @settingPath = dir + "/setting.txt"
+    @settingPath = dir + "/setting.yml"
+    @settings = {}
     loadSettings
-    @autoSave = settings("disable_auto_saving") != "true"
+    @autoSave = @settings["disable_auto_saving"] != "true"
     
     #働き者のオブジェクト達を作る。
     warn "ログロード中..."
@@ -47,8 +48,7 @@ class Reudy
     @associator = WordAssociator.new(dir + "/assoc.txt")
     @attention = AttentionDecider.new
     @attention.setParameter(attentionParameters)
-    @resEst = ResponseEstimator.new(@log, @wordSearcher,
-      method(:isUsableBaseMsg), method(:canAdoptWord))
+    @resEst = ResponseEstimator.new(@log, @wordSearcher, method(:isUsableBaseMsg), method(:canAdoptWord))
     
     #その他インスタンス変数の初期化。
     @client = nil
@@ -71,12 +71,8 @@ class Reudy
   #設定をファイルからロード
   def loadSettings
     Kernel.open(@settingPath) do |file|
-      @settings = {}
-      file.each_line do |line|
-        line.chomp!
-        if line =~ /^\s*(\S+)(\s.*)?$/o
-          @settings[$1] = $2 ? $2.strip : ""
-        end
+      YAML.load_documents(file) do |y|
+        @settings = y
       end
     end
     @fixedSettings.each do |key, val|
@@ -90,17 +86,12 @@ class Reudy
       #何にもマッチしない正規表現のつもり
     @forbiddenNickReg= Regexp.new(s, Regexp::IGNORECASE)
       #これにマッチするNickの発言は、ベース発言として使用不能
-    @myNicks = settings("nicks").split(/\s*,\s*/)
-    changeMode(settings("default_mode").to_i)
+    @myNicks = @settings["nicks"]
+    changeMode(@settings["default_mode"].to_i)
   end
   
   #チャットクライアントの指定
-  attr_writer :client
-  
-  #チャットオブジェクト用の設定
-  def settings(key)
-    return @settings[key]
-  end
+  attr_accessor :client,:settings
   
   #モードを変更
   def changeMode(mode)
@@ -193,7 +184,7 @@ class Reudy
     #自分自身の発言。
     #この発言者の発言は使えない。
     #最近そのベース発言を使った。
-    if (settings("teacher_mode") != "true" && size > @recentUnusedCt && msgN >= size - @recentUnusedCt)\
+    if (@settings["teacher_mode"] != "true" && size > @recentUnusedCt && msgN >= size - @recentUnusedCt)\
         || nick == "!"\
         || (!(nick =~ @targetNickReg) || nick =~ @forbiddenNickReg)\
         || @recentBaseMsgNs.include?(msgN)
@@ -207,7 +198,7 @@ class Reudy
   #ただし、ベース発言として使用できるものだけが対象。
   #該当するものが無ければ[nil,0]を返す。
   def responseTo(mid, debug = false)
-    if settings("teacher_mode")
+    if @settings["teacher_mode"]
       if isUsableBaseMsg(mid+1) && @log[mid].fromNick == "!input"
         return [mid+1, 20]
       else
@@ -474,7 +465,7 @@ class Reudy
     @lastSpeachInput = input
     @lastSpeach = output
     studyMsg("!", output) #自分の発言を記憶する。
-    @client.outputInfo("「#{input}」に反応した。") if settings("teacher_mode") == "true"
+    @client.outputInfo("「#{input}」に反応した。") if @settings["teacher_mode"] == "true"
     @attention.onSelfSpeak(@wordSearcher.searchWords(output))
     @client.speak(output)
   end
@@ -487,7 +478,7 @@ class Reudy
       loadSettings
       return "設定を更新しました。"
     end
-    return nil if settings("disable_commands") == "true" #コマンドが禁止されている場合
+    return nil if @settings["disable_commands"] == "true" #コマンドが禁止されている場合
     case input
     when /黙れ|黙りなさい|黙ってろ|沈黙モード/o
       return changeMode(0) ? "沈黙モードに切り替える。" : ""
@@ -531,8 +522,8 @@ class Reudy
   
   #通常の発言を学習。
   def studyMsg(fromNick, input)
-    return if settings("disable_studying") == "true"
-    if settings("teacher_mode") == "true"
+    return if @settings["disable_studying"] == "true"
+    if @settings["teacher_mode"] == "true"
       @fromNick = fromNick
       @extractor.processLine(input) #単語の抽出のみ。
     else
@@ -549,7 +540,7 @@ class Reudy
   def onAddMsg
     msg = @log[@log.size-1]
     @fromNick = msg.fromNick unless msg.fromNick == "!"
-    unless settings("teacher_mode") == "true"
+    unless @settings["teacher_mode"] == "true"
       #中の人モードでは、単語の抽出は別にやる。
       @extractor.processLine(msg.body)
     end
@@ -608,7 +599,7 @@ class Reudy
   
   #制御発言（infoでの発言）があった。
   def onControlMsg(str)
-    return if settings("disable_studying") == "true" || settings("teacher_mode") != "true"
+    return if @settings["disable_studying"] == "true" || @settings["teacher_mode"] != "true"
     if str =~ /^(.+)→→(.+)$/o
       input = $1
       output = $2
