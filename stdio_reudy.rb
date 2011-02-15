@@ -23,7 +23,7 @@ class StdioClient
     @user = user
     @user.client = self
     @yourNick = yourNick
-    greeting = @user.settings("joining_message")
+    greeting = @user.settings["joining_message"]
     puts greeting if greeting
   end
   
@@ -65,15 +65,21 @@ db = 'pstore'
 opt.on('--db DB_TYPE') do |v|
   db = v
 end
-opt.parse!(ARGV)
 
 nick = 'test'
 opt.on('-n nickname') do |v|
   nick = v
 end
 
+mecab = nil
+opt.on('-m','--mecab') do |v|
+  mecab = true
+end
+
+opt.parse!(ARGV)
+
 $stdout.sync = true
-client = StdioClient.new(Reudy.new(directory,{},db),nick) #標準入出力用ロイディを作成
+client = StdioClient.new(Reudy.new(directory,{},db,mecab),nick) #標準入出力用ロイディを作成
 client.loop
 
 end

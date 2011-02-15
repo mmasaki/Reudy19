@@ -61,7 +61,7 @@ class SimilarSearcher
     return unless cont
     cont = cont.dup
     size = cont.size
-    until cont.empty?
+    until size > 0
       block.call(cont.delete_at(rand(size)))
       size -= 1
     end
@@ -122,7 +122,7 @@ class SimilarSearcher
   
   #発言から「ひらがなと一部の記号」以外を消し、記号を統一する。
   def normalizeMsg(s)
-    s.gsub!(/[^ぁ-んー−？！\?!\.]+/, "")
+    s = s.gsub(/[^ぁ-んー−？！\?!\.]+/, "")
     s.gsub!(/？/, "?")
     s.gsub!(/！/,"!")
     s.gsub!(/[ー−+]/, "ー")

@@ -19,21 +19,21 @@ class BotIRCClient < IRCC
   def initialize(user, logOut = $stdout)
     @user = user
     @isExitting = false
-    @channel = @user.settings("channel")
-    @infoChannel = @user.settings("info_channel")
-    @nick = @user.settings("nick")
+    @channel = @user.settings["channel"]
+    @infoChannel = @user.settings["info_channel"]
+    @nick = @user.settings["nick"]
     @user.client = self
     @user.onBeginConnecting
-    pass = @user.settings("login_password")
+    pass = @user.settings["login_password"]
     option = {
-      'user'=>@user.settings("name"), \
-      'realname'=>@user.settings("real_name"), \
+      'user'=>@user.settings["name"], \
+      'realname'=>@user.settings["real_name"], \
       'pass'=>pass, \
       'nick'=>@nick, \
       'channel'=>@channel, \
-      'channel_key'=>@user.settings("channel_key") \
+      'channel_key'=>@user.settings["channel_key"] \
     }
-    super(nil, option, __ENCODING__.to_s, logOut, @user.settings("encoding") || "ISO-2022-JP")
+    super(nil, option, __ENCODING__.to_s, logOut, @user.settings["encoding"] || "ISO-2022-JP")
   end
   
   #IRCのメッセージをひたすら処理するループ。
@@ -44,7 +44,7 @@ class BotIRCClient < IRCC
         @prevTime = Time.now #onSilent用。
         @receiveQue = Queue.new #受け取った通常発言のキュー。
         @controlQue = Queue.new #受け取った制御発言のキュー。
-        connect(TCPSocket.open(@user.settings("host"), @user.settings("port").to_i,@user.settings("localhost")))
+        connect(TCPSocket.open(@user.settings["host"], @user.settings["port"].to_i,@user.settings["localhost"]))
         on_connect #ソケット接続時の処理。
         pingThread = Thread.new{ pingProcess }
         receiveThread = Thread.new{ receiveProcess }
@@ -67,7 +67,7 @@ class BotIRCClient < IRCC
       pingThread.exit if pingThread
       @receiveQue.push(nil)
       receiveThread.join if receiveThread
-      break if @isExitting || @user.settings("auto_reconnect") != "true"
+      break if @isExitting || @user.settings["auto_reconnect"] != "true"
       sleep(10)
       break unless queryReconnect
       puts "再接続中..."
@@ -76,13 +76,13 @@ class BotIRCClient < IRCC
   
   #補助情報を出力
   def outputInfo(s)
-    sleep(@user.settings("wait_before_info").to_f) if @user.settings("wait_before_info")
+    sleep(@user.settings["wait_before_info"].to_f) if @user.settings["wait_before_info"]
     sendmess("NOTICE " + @infoChannel + " :" + s + "\n")
   end
   
   #発言する
   def speak(s)
-    if @user.settings("speak_with_privmsg") == "true"
+    if @user.settings["speak_with_privmsg"] == "true"
       sendpriv(s)
     else
       sendnotice(s)
@@ -91,7 +91,7 @@ class BotIRCClient < IRCC
   
   #チャンネルを移動。接続中はこっちを使う。
   def moveChannel(channel)
-    greeting = @user.settings("leaving_message")
+    greeting = @user.settings["leaving_message"]
     speak(greeting) if greeting
     @channel = channel
     movechannel(@channel)
@@ -109,7 +109,7 @@ class BotIRCClient < IRCC
   #終了。
   def exit
     @isExitting = true
-    greeting = @user.settings("leaving_message")
+    greeting = @user.settings["leaving_message"]
     sendmess(greeting ? "QUIT :" + greeting + "\r\n" : "QUIT\r\n")
   end
   
@@ -149,7 +149,7 @@ class BotIRCClient < IRCC
   
   #普通のメッセージ
   def onPriv(type, nick, mess)
-    if nick != @nick && (@user.settings("respond_to_notice") == "true" || type == "PRIVMSG")
+    if nick != @nick && (@user.settings["respond_to_notice"] == "true" || type == "PRIVMSG")
       @prevTime= Time.now
       @receiveQue.push([nick, mess.strip])
     end
@@ -157,9 +157,9 @@ class BotIRCClient < IRCC
   
   #今いるチャンネルの外からの普通のメッセージ
   def onExternalPriv(type, nick, to, mess)
-    return if nick == @nick || (@user.settings("respond_to_notice") != "true" && type != "PRIVMSG")
+    return if nick == @nick || (@user.settings["respond_to_notice"] != "true" && type != "PRIVMSG")
     @prevTime = Time.now
-    if @user.settings("respond_to_external") != "true"
+    if @user.settings["respond_to_external"] != "true"
       #チャンネル外からの発言は制御発言、という危険な仮仕様。
       @controlQue.push(mess.strip)
       @receiveQue.push(:nop) #メッセージ処理ループのブロックを解く。
@@ -170,7 +170,7 @@ class BotIRCClient < IRCC
   
   #他人がJOINした
   def onJoin(nick, channel)
-    greeting = @user.settings("private_greeting")
+    greeting = @user.settings["private_greeting"]
     sendmess("NOTICE " + nick + " :" + greeting + "\n") if greeting && !greeting.empty?
     @user.onOtherJoin(nick)
   end
@@ -180,7 +180,7 @@ class BotIRCClient < IRCC
     channel.strip!
     channel.downcase!
     if channel == @channel.downcase
-      greeting = @user.settings("joining_message")
+      greeting = @user.settings["joining_message"]
       speak(greeting) if greeting
       @user.onSelfJoin
     end
@@ -204,9 +204,9 @@ class BotIRCClient < IRCC
   #エラー
   def onError(code)
     if code == "433" #ERR_NICKNAMEINUSE ニックネームはすでに使用されている
-      puts "Error: ニックネーム " + @nick + " は、別の人に使われています。"
+      puts "Error: ニックネーム #{@nick} は、別の人に使われています。"
     else
-      puts "Error: エラーコード " + code
+      puts "Error: エラーコード #{code}"
     end
     sendmess_raw("QUIT\r\n") #一度QUITして再接続。
   end
@@ -217,8 +217,8 @@ class BotIRCClient < IRCC
   def receiveProcess
     while args = popMessage
       while args
-        if @user.settings("wait_before_speak")
-          sleep(@user.settings("wait_before_speak").to_f * (0.5 + rand))
+        if @user.settings["wait_before_speak"]
+          sleep(@user.settings["wait_before_speak"].to_f * (0.5 + rand))
         end
         if @receiveQue.empty?
           @user.onOtherSpeak(*(args+[false]))
@@ -252,7 +252,7 @@ class BotIRCClient < IRCC
     while true
       sleep(SILENT_SECOND)
       begin
-        sendmess("TOPIC " + @channel + "\r\n")
+        sendmess("TOPIC #{@channel}\r\n")
       rescue
         sock.close
         Thread.exit

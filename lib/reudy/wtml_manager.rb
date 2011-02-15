@@ -17,8 +17,7 @@ class WordToMessageListManager
   end
   
   def onAddMsg
-    msgN = @log.size - 1
-    @wordSearcher.searchWords(@log[msgN].body).each do |word|
+    @wordSearcher.searchWords(@log[-2].body).each do |word|
       word.msgNs.push(msgN)
     end
   end

@@ -1,10 +1,8 @@
 #encoding:utf-8
-#日本語文字コード判定用コメント
-
 $REUDY_DIR= "./lib/reudy" unless defined?($REUDY_DIR) #スクリプトがあるディレクトリ
-CONSUMER = { #http://twitter.com/oauth_client/newからアプリを作成して下さい
-      :key => "取得したConsumer keyをここに入力して下さい",
-      :secret => "取得したConsumer secretをここに入力して下さい"
+CONSUMER = { #get it in http://twitter.com/oauth_client/new
+      :key => "Key",
+      :secret => "secret"
       }
 
 trap(:INT){ exit }
@@ -80,10 +78,16 @@ db = 'pstore'
 opt.on('--db DB_TYPE') do |v|
   db = v
 end
+
+mecab = nil
+opt.on('-m','--mecab') do |v|
+  mecab = true
+end
+
 opt.parse!(ARGV)  
 
 #twitter用ロイディを作成
-client = TwitterClient.new(Reudy.new(directory,{},db))
+client = TwitterClient.new(Reudy.new(directory,{},db,mecab))
   
 loop do
   begin

@@ -165,8 +165,7 @@ class Reudy
       @wordAdoptBorder = 0
       return
     end
-    msgCts.sort!
-    msgCts.reverse!
+    msgCts.sort!{|i| -i } #逆順ソート
     @wordAdoptBorder = msgCts[msgCts.size / 50]
   end
   

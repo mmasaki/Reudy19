@@ -31,9 +31,7 @@ class ResponseEstimator
   def responseTo(mid, debug = false)
     return [nil,0] unless mid
     numTargets = 5
-    if @cache[mid] && @msgFilter.call(@cache[mid][0])
-      return @cache[mid] #キャッシュにヒット。
-    end
+    return @cache[mid] if @cache[mid] && @msgFilter.call(@cache[mid].first) #キャッシュにヒット。
     
     candMids = (mid+1..mid+numTargets).select{ |n| @msgFilter.call(n) }
     return [nil, 0] if candMids.empty?
@@ -56,7 +54,7 @@ class ResponseEstimator
       end
     end
     prob = resMid ? numTargets : 0 #同じ単語を含む方が、返事らしさが高い。
-    resMid = candMids[0] unless resMid
+    resMid = candMids.first unless resMid
     prob += numTargets + 1 - (resMid-mid) #近い発言の方が、返事らしさが高い。
     
     #キャッシュしておく。

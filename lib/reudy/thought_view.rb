@@ -1,7 +1,7 @@
 #encoding:utf-8
 $REUDY_DIR= "." unless defined?($REUDY_DIR) #スクリプトがあるディレクトリ
 
-require "message_log"
+require "./message_log"
 require "ostruct"
 require "erb"
 

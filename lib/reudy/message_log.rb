@@ -45,16 +45,16 @@ class MessageLog
   
   #外部ファイルを登録し、外部ファイルの内容を内部データに反映する。
   def updateByOuterFile(outerFileName)
-    msg = nil
     isAdded = false
     if size.zero?
-      msg = "#{@innerFileName} が有りません。作成します...\n"
+      warn "#{@innerFileName} が有りません。作成します..."
       isAdded = true
+      update = true
     elsif MessageLog.enable_update_check && File.mtime(outerFileName) > File.mtime(@innerFileName)
-      msg = "#{outerFileName} が変更されたようです。調査中...\n"
+      warn "#{outerFileName} が変更されたようです。調査中..."
+      update = true
     end
-    if msg
-      warn msg
+    if update
       syncBak = sync
       sync = false
       #外部ファイルと内部データを比較し、追加が有れば追加する。
@@ -73,8 +73,7 @@ class MessageLog
         end
         n += 1
       end
-      #途中が編集されてたら、内部データを一から作り直す。
-      if n < size
+      if n < size #途中が編集されてたら、内部データを一から作り直す。
         warn "#{outerFileName} の途中が変更されています。内部データを作り直します..."
         clear
         n = 0

@@ -12,10 +12,6 @@ require $REUDY_DIR+'/reudy'
 
 module Gimite
 
-trap(:INT){
-  exit
-}
-
 $stdout.sync = true
 $stderr.sync = true
 Thread.abort_on_exception = true
@@ -31,13 +27,19 @@ db = 'pstore'
 opt.on('-db DB_TYPE') do |v|
   db = v
 end
+
+mecab = nil
+opt.on('-m','--mecab') do |v|
+  mecab = true
+end
+
 opt.parse!(ARGV)
 
 MessageLog.enable_update_check = !$OPT_f
 
 begin
   #IRC用ロイディを作成
-  client= BotIRCClient.new(Reudy.new(directory,{},db))
+  client= BotIRCClient.new(Reudy.new(directory,{},db,mecab))
   client.processLoop()
 rescue Interrupt
   #割り込み発生。
