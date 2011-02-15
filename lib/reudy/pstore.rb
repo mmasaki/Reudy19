@@ -1,13 +1,8 @@
-#Copyright (C) 2003 Gimite 市川 <gimite@mx12.freecom.ne.jp>
-
-#日本語文字コード判定用コメント
+#encoding: utf-8
 require 'pstore'
-$NO_GDBM = false
 
 module Gimite
 
-unless $NO_GDBM
-#値が文字列以外でもOKなGDBM（手抜き）
 class DB
   def initialize(*args)
     @db = PStore.new("db")
@@ -55,6 +50,5 @@ class DB
   end
 end
 
-end #if !$NO_GDBM
 end #module Gimite
 

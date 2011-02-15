@@ -1,8 +1,6 @@
 #encoding: utf-8
 #Copyright (C) 2003 Gimite 市川 <gimite@mx12.freecom.ne.jp>
 
-#日本語文字コード判定用コメント
-DEBUG = true
 require 'socket'
 require 'thread'
 require $REUDY_DIR + '/irc-client'
@@ -12,7 +10,7 @@ module Gimite
 
 #ボット用のIRCクライアント
 class BotIRCClient < IRCC
-  include(Gimite)
+  include Gimite
   
   SILENT_SECOND = 20.0 #沈黙が続いたと判断する秒数。
   
@@ -38,7 +36,7 @@ class BotIRCClient < IRCC
   
   #IRCのメッセージをひたすら処理するループ。
   def processLoop
-    while true
+    loop do
       begin
         @isJoiningInfoChannel = false
         @prevTime = Time.now #onSilent用。
@@ -62,12 +60,12 @@ class BotIRCClient < IRCC
         end
         puts "切断されました。"
       rescue SystemCallError, SocketError, IOError => ex
-        puts "切断されました。" + ex.message
+        puts "切断されました。#{ex.message}"
       end
       pingThread.exit if pingThread
       @receiveQue.push(nil)
       receiveThread.join if receiveThread
-      break if @isExitting || @user.settings[:auto_reconnect] != "true"
+      break if @isExitting || @user.settings[:auto_reconnect]
       sleep(10)
       break unless queryReconnect
       puts "再接続中..."
@@ -82,7 +80,7 @@ class BotIRCClient < IRCC
   
   #発言する
   def speak(s)
-    if @user.settings[:speak_with_privmsg] == "true"
+    if @user.settings[:speak_with_privmsg]
       sendpriv(s)
     else
       sendnotice(s)
@@ -149,7 +147,7 @@ class BotIRCClient < IRCC
   
   #普通のメッセージ
   def onPriv(type, nick, mess)
-    if nick != @nick && (@user.settings[:respond_to_notice] == "true" || type == "PRIVMSG")
+    if nick != @nick && (@user.settings[:respond_to_notice] || type == "PRIVMSG")
       @prevTime= Time.now
       @receiveQue.push([nick, mess.strip])
     end
@@ -157,9 +155,9 @@ class BotIRCClient < IRCC
   
   #今いるチャンネルの外からの普通のメッセージ
   def onExternalPriv(type, nick, to, mess)
-    return if nick == @nick || (@user.settings[:respond_to_notice] != "true" && type != "PRIVMSG")
+    return if nick == @nick || (!@user.settings[:respond_to_notice] && type != "PRIVMSG")
     @prevTime = Time.now
-    if @user.settings[:respond_to_external] != "true"
+    if @user.settings[:respond_to_external]
       #チャンネル外からの発言は制御発言、という危険な仮仕様。
       @controlQue.push(mess.strip)
       @receiveQue.push(:nop) #メッセージ処理ループのブロックを解く。
@@ -171,7 +169,7 @@ class BotIRCClient < IRCC
   #他人がJOINした
   def onJoin(nick, channel)
     greeting = @user.settings[:private_greeting]
-    sendmess("NOTICE " + nick + " :" + greeting + "\n") if greeting && !greeting.empty?
+    sendmess("NOTICE #{nick} :#{greeting}\n") if greeting && !greeting.empty?
     @user.onOtherJoin(nick)
   end
   
@@ -185,7 +183,7 @@ class BotIRCClient < IRCC
       @user.onSelfJoin
     end
     unless @isJoiningInfoChannel
-      sendmess("JOIN " + @infoChannel+"\r\n") 
+      sendmess("JOIN #{@infoChannel}\r\n") 
       @isJoiningInfoChannel = true
     end
   end

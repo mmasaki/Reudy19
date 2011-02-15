@@ -2,14 +2,11 @@
 #Copyright (C) 2003 Gimite 市川 <gimite@mx12.freecom.ne.jp>
 
 #文尾だけを使った類似判定。
-
-#日本語文字コード判定用コメント
 $REUDY_DIR= "." unless defined?($REUDY_DIR) #スクリプトがあるディレクトリ
 
 require 'set'
 require $REUDY_DIR+'/reudy_common'
 require $REUDY_DIR+'/message_log'
-#require $REUDY_DIR+'/db'
 
 module Gimite
 
@@ -44,8 +41,9 @@ class SimilarSearcher
   #inputに類似する各発言に対して、発言番号を引数にblockを呼ぶ。発言の順序は微妙にランダム。
   def eachSimilarMsg(input, &block)
     ws = normalizeMsg(input)
-    return if ws.size <= 1
-    if ws.size >= @compLen
+    ws_size = ws.size
+    return if ws_size <= 1
+    if ws_size >= @compLen
       wtail = ws[-@compLen..-1]#文尾。
       randomEach(@tailMap[wtail], &block)
       0.upto(@compLen-1) do |i|

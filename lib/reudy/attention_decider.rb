@@ -2,8 +2,6 @@
 #Copyright (C) 2003 Gimite 市川 <gimite@mx12.freecom.ne.jp>
 
 #文尾だけを使った類似判定。
-
-#日本語文字コード判定用コメント
 require $REUDY_DIR+'/reudy_common'
 
 module Gimite

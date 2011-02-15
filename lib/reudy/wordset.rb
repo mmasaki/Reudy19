@@ -1,13 +1,11 @@
 #encoding:utf-8
 #Copyright (C) 2003 Gimite 市川 <gimite@mx12.freecom.ne.jp>
 
-#日本語文字コード判定用コメント
 require "fileutils"
 require $REUDY_DIR+'/reudy_common'
 
 module Gimite
-#単語。
-class Word
+class Word #単語クラス
   #注：このクラスのインスタンスはMarshalで保存されるので、
   #    気軽にインスタンス変数名を変えない事。
   def initialize(s, a = "", m = [])
@@ -36,13 +34,7 @@ class Word
     return "<Word: \"#{str}\">"
   end
 
-  attr_accessor :str
-  attr_accessor :author
-  attr_accessor :mids
-  
-  #古い名前。互換性のため。
-  alias msgNs mids
-  alias msgNs= mids=  
+  attr_accessor :str,:author,:mids
 end
 
 # 単語集
@@ -80,10 +72,11 @@ class WordSet
         #外部ファイル中の単語を追加する。
         #内部データに有って外部ファイルに無い単語については、現バージョンでは何もしていないので注意。
         #data[1], data[2]はVer.3.04以前のデータを引き継ぐために使われる。
-        next if str.empty?
         str.chomp!
+        next if str.empty?
         warn "#{n+1}語目..." if ((n+1) % 100).zero?
-        if word = addWord(str)
+        word = addWord(str)
+        if word
           warn "単語「#{word.str}」を追加中..."
           wtmlManager.attachMsgList(word)
         end
@@ -97,12 +90,11 @@ class WordSet
   #単語を追加
   def addWord(str, author= "")
     word = Word.new(str, author)
-    i = -1
-    @words.each_with_index do |each_word,j|
-      if str.include?(each_word.str)
-        i = j
-        break
-      end
+    i = 0
+    size = @words.size
+    while i < size
+      break if str.include?(@words[i].str)
+      i += 1
     end
     if @words[i] && @words[i].str == str
       return nil
@@ -138,7 +130,7 @@ class WordSet
   #中身をテキスト形式で出力。
   def output(io)
     @words.each do |word|
-      io.print(word.str, "\t", word.author, "\t", word.mids.join(","), "\n")
+      io.print word.str, "\t", word.author, "\t", word.mids.join(","), "\n"
     end
   end
   

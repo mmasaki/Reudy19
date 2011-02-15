@@ -1,7 +1,6 @@
 #encoding:utf-8
 #Copyright (C) 2003 Gimite 市川 <gimite@mx12.freecom.ne.jp>
 
-#日本語文字コード判定用コメント
 require $REUDY_DIR+'/reudy_common'
 
 module Gimite
@@ -111,8 +110,8 @@ class MessageLog
   def addMsg(fromNick, body, toOuter = true)
     @innerFile.seek(0, IO::SEEK_END)
     @msgPoses.push(@innerFile.pos)
-    @outerFile.print(fromNick + "\t" + body + "\n") if toOuter && @outerFile
-    @innerFile.print(fromNick + "\t" + body + "\n")
+    @outerFile.puts "#{fromNick}\t#{body}" if toOuter && @outerFile
+    @innerFile.puts "#{fromNick}\t#{body}"
     @observers.each do |observer|
       observer.onAddMsg
     end

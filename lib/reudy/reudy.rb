@@ -8,7 +8,6 @@ require $REUDY_DIR+'/word_associator'
 require $REUDY_DIR+'/wtml_manager'
 require $REUDY_DIR+'/attention_decider'
 require $REUDY_DIR+'/response_estimator'
-require $REUDY_DIR+'/version'
 require $REUDY_DIR+'/reudy_common'
 require 'yaml/store'
 
@@ -19,7 +18,6 @@ class Reudy
   
   def initialize(dir, fixedSettings = {},db="pstore",mecab=nil)
     @attention = nil
-    ReudyVersion.new.checkDataVersion(dir) #バージョンアップチェック。必要なら、データを新しい形式に変換。
      
     #設定を読み込む。
     @db = db #使用するDBの名前
@@ -29,10 +27,10 @@ class Reudy
       require $REUDY_DIR+'/tango-mgm'
     end
     @fixedSettings = fixedSettings
-    @settingPath = dir + "/setting.yml"
+    @settingPath = dir + '/setting.yml'
     @settings = {}
     loadSettings
-    @autoSave = @settings[:disable_auto_saving] != "true"
+    @autoSave = !@settings[:disable_auto_saving]
     
     #働き者のオブジェクト達を作る。
     warn "ログロード中..."
@@ -40,12 +38,12 @@ class Reudy
     @log.addObserver(self)
     @log.sync = @autoSave
     warn "単語ロード中..."
-    @wordSet = WordSet.new(dir + "/words.dat")
+    @wordSet = WordSet.new(dir + '/words.dat')
     @wordSearcher = WordSearcher.new(@wordSet)
     @wtmlManager = WordToMessageListManager.new(@wordSet, @log, @wordSearcher)
     @extractor = WordExtractor.new(14, method(:onAddWord))
-    @simSearcher = SimilarSearcher.new(dir + "/db", @log,@db)
-    @associator = WordAssociator.new(dir + "/assoc.txt")
+    @simSearcher = SimilarSearcher.new(dir + '/db', @log,@db)
+    @associator = WordAssociator.new(dir + '/assoc.txt')
     @attention = AttentionDecider.new
     @attention.setParameter(attentionParameters)
     @resEst = ResponseEstimator.new(@log, @wordSearcher, method(:isUsableBaseMsg), method(:canAdoptWord))
@@ -81,13 +79,13 @@ class Reudy
     #メンバ変数を更新
     @targetNickReg = Regexp.new(@settings[:target_nick] || "", Regexp::IGNORECASE)
     #これにマッチしないNickの発言は、ベース発言として使用不能
-    s = @settings[:forbidden_nick]
-    s = "(?!.*)" if !s || s.empty?
-      #何にもマッチしない正規表現のつもり
-    @forbiddenNickReg= Regexp.new(s, Regexp::IGNORECASE)
-      #これにマッチするNickの発言は、ベース発言として使用不能
-    @myNicks = @settings[:nicks]
-    changeMode(@settings[:default_mode].to_i)
+    if @settings[:forbidden_nick] && !@settings[:forbidden_nick].empty?
+      @forbiddenNickReg = Regexp.new(@settings[:forbidden_nick], Regexp::IGNORECASE)
+    else 
+      @forbiddenNickReg = Regexp.new("(?!)") #何にもマッチしない正規表現
+    end
+    @myNicks = @settings[:nicks] #これにマッチするNickの発言は、ベース発言として使用不能
+    changeMode(@settings[:default_mode].to_i) #デフォルトのモードに変更
   end
   
   #チャットクライアントの指定
@@ -171,7 +169,7 @@ class Reudy
   
   #その単語が置換などの対象になるか
   def canAdoptWord(word)
-    return word.msgNs.size < @wordAdoptBorder
+    return word.mids.size < @wordAdoptBorder
   end
   
   #発言をベース発言として使用可能か。
@@ -183,7 +181,7 @@ class Reudy
     #自分自身の発言。
     #この発言者の発言は使えない。
     #最近そのベース発言を使った。
-    if (@settings[:teacher_mode] != "true" && size > @recentUnusedCt && msgN >= size - @recentUnusedCt)\
+    if (!@settings[:teacher_mode] && size > @recentUnusedCt && msgN >= size - @recentUnusedCt)\
         || nick == "!"\
         || (!(nick =~ @targetNickReg) || nick =~ @forbiddenNickReg)\
         || @recentBaseMsgNs.include?(msgN)
@@ -267,11 +265,11 @@ class Reudy
     until words.empty?
       word = words.delete_at(rand(words_size))
       words_size -= 1
-      msgNs = word.msgNs.dup
-      msgNs_size = msgNs.size
-      until msgNs.empty?
-        block.call(msgNs.delete_at(rand(msgNs_size)))
-        msgNs_size -= 1
+      mids = word.mids.dup
+      mids_size = mids.size
+      until mids.empty?
+        block.call(mids.delete_at(rand(mids_size)))
+        mids_size -= 1
       end
     end
   end
@@ -464,7 +462,7 @@ class Reudy
     @lastSpeachInput = input
     @lastSpeach = output
     studyMsg("!", output) #自分の発言を記憶する。
-    @client.outputInfo("「#{input}」に反応した。") if @settings[:teacher_mode] == "true"
+    @client.outputInfo("「#{input}」に反応した。") if @settings[:teacher_mode]
     @attention.onSelfSpeak(@wordSearcher.searchWords(output))
     @client.speak(output)
   end
@@ -477,7 +475,7 @@ class Reudy
       loadSettings
       return "設定を更新しました。"
     end
-    return nil if @settings[:disable_commands] == "true" #コマンドが禁止されている場合
+    return nil if @settings[:disable_commands] #コマンドが禁止されている場合
     case input
     when /黙れ|黙りなさい|黙ってろ|沈黙モード/o
       return changeMode(0) ? "沈黙モードに切り替える。" : ""
@@ -521,8 +519,8 @@ class Reudy
   
   #通常の発言を学習。
   def studyMsg(fromNick, input)
-    return if @settings[:disable_studying] == "true"
-    if @settings[:teacher_mode] == "true"
+    return if @settings[:disable_studying]
+    if @settings[:teacher_mode]
       @fromNick = fromNick
       @extractor.processLine(input) #単語の抽出のみ。
     else
@@ -539,7 +537,7 @@ class Reudy
   def onAddMsg
     msg = @log[@log.size-1]
     @fromNick = msg.fromNick unless msg.fromNick == "!"
-    unless @settings[:teacher_mode] == "true"
+    unless @settings[:teacher_mode]
       #中の人モードでは、単語の抽出は別にやる。
       @extractor.processLine(msg.body)
     end
@@ -598,7 +596,7 @@ class Reudy
   
   #制御発言（infoでの発言）があった。
   def onControlMsg(str)
-    return if @settings[:disable_studying] == "true" || @settings[:teacher_mode] != "true"
+    return if @settings[:disable_studying] || !@settings[:teacher_mode]
     if str =~ /^(.+)→→(.+)$/o
       input = $1
       output = $2
@@ -616,7 +614,6 @@ class Reudy
   #沈黙がしばらく続いた。
   def onSilent
     prob = @attention.onSilent
-    #dprint("発言率", @attention.to_s)
     if rand < prob && @lastSpeach
       speakFreely(@fromNick, @lastSpeach, prob > rand * 1.1) #自発発言。
       #自発発言では、発言が無い限り、同じ発言を対象にしつづける。

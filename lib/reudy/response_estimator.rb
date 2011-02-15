@@ -1,7 +1,6 @@
 #encoding:utf-8
 #Copyright (C) 2003 Gimite 市川 <gimite@mx12.freecom.ne.jp>
 
-#日本語文字コード判定用コメント
 $REUDY_DIR= "." unless defined?($REUDY_DIR) #スクリプトがあるディレクトリ
 
 require $REUDY_DIR+'/message_log'

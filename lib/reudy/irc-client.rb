@@ -32,7 +32,6 @@
 #----------------------------------------------------------------------------
 #----------------------------------------------------------------------------
 require "kconv"
-ISO_2022_JP = Encoding.find("ISO-2022-JP")
 
 class IRCC
   def initialize(sock,userinfo,internal_encoding="UTF-8",disp=$stdout,irc_encoding="ISO-2022-JP")
@@ -59,21 +58,23 @@ class IRCC
     @sock = sock
     @myprefix = nil
   end
-  
+=begin 
   def convert_encoding(buff,from,to)
-    return buff if from == to
-    return Kconv.kconv(buff,to,from) if to == ISO_2022_JP || from == ISO_2022_JP #変換にiso-2022-jpが絡む場合
+    return Kconv.kconv(buff,to,from) if to == Encoding::ISO_2022_JP || from == Encoding::ISO_2022_JP #変換にiso-2022-jpが絡む場合
     return buff.encode!(to,from)
+    puts "convert_encoding"
   end
-
+=end
   # IRCの文字コードから内部コードに変換
   def irc_to_internal(buff)
-    return convert_encoding(buff,@irc_encoding,@internal_encoding)
+    return Kconv.kconv(buff,@internal_encoding,@irc_encoding) if @internal_encoding == Encoding::ISO_2022_JP || @irc_encoding == Encoding::ISO_2022_JP
+    return buff.encode!(@internal_encoding,@irc_encoding)
   end
 
   # 内部コードからIRCの文字コードに変換
-  def internal_to_irc(buff) 
-    return convert_encoding(buff,@internal_encoding,@irc_encoding)
+  def internal_to_irc(buff)
+    return Kconv.kconv(buff,@irc_encoding,@internal_encoding) if @internal_encoding == Encoding::ISO_2022_JP || @irc_encoding == Encoding::ISO_2022_JP
+    return buff.encode!(@irc_encoding,@internal_encoding)
   end
 
   # チャンネル名をセット
@@ -84,7 +85,7 @@ class IRCC
   # メッセージを送信(生)
   def sendmess(mess)
     @sock.print(internal_to_irc(mess))
-    @disp.puts(mess.chop) if DEBUG
+    @disp.puts(mess.chop)
   end
 
   # メッセージの送信(通常のPRIVMSGで)
@@ -120,11 +121,8 @@ class IRCC
   # サーバから受け取ったメッセージを処理
   def on_recv(s)
     s.chomp!
-    # ここで変換してしまうと、internal_to_irc(irc_to_internal(s)) != s となるような
-    # チャンネル名/nickなどで問題が起きる可能性がある。本来は元の文字コードでの
-    # チャンネル名/nickもあわせて保持すべきだが、面倒なので放置。
     s = irc_to_internal(s)
-    @disp.puts('>'+s) if DEBUG
+    @disp.puts ">#{s}"
 
     prefix = ":unknown!unknown@unknown"
     prefix,param = s.split(' ',2) if s[0..0] == ':'
@@ -226,13 +224,13 @@ class IRCC
       on_error('433')  # 正しくは重複しないnickで再度NICKを発行
     when '451'      # 認証されていない
       on_error('451')
-      @disp.puts('unknown login sequence!!') if DEBUG
+      @disp.puts('unknown login sequence!!')
     end
   end
 
   # 接続確立時の処理
   def on_connect
-    @disp.puts('connect') if DEBUG
+    @disp.puts "connect"
     dispmess(nil,'Login...')
 
     if @userinfo['pass'] && !@userinfo['pass'].empty?
@@ -331,5 +329,3 @@ class IRCC
     sendmess("QUIT\r\n")  # 面倒なので終了にしている
   end
 end
-#----------------------------------------------------------------------------
-
