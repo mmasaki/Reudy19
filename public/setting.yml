@@ -4,37 +4,37 @@
 
 # 1. IRCに接続する場合は、接続先のホスト名、ポート番号、文字コード、チャンネルを書いてください。
 
-host: irc.ircnet.ne.jp
-port: 6668
-encoding: ISO-2022-JP
-channel: "#reudy_test"
-info_channel: "#reudy_test"
+:host: irc.ircnet.ne.jp
+:port: 6668
+:encoding: ISO-2022-JP
+:channel: "#reudy_test"
+:info_channel: "#reudy_test"
 
 # 2. IRCのサーバ/チャンネルに入るのにパスワードが必要な場合は、指定してください。
 
-login_password:
-channel_key:
+:login_password:
+:channel_key:
 
 # 3. 以下の項目は、変更しなくてもとりあえず動きます。必要に応じていじってください。
 
-nick: ReudyTest
-nicks: 
+:nick: ReudyTest
+:nicks: 
   - Reudy
   - reudy
   - ロイディ
-default_mode: 2
-joining_message: こんにちは。
-leaving_message: さようなら。
-private_greeting:
-disable_commands: false
-disable_studying: false
-respond_to_notice: false
-respond_to_external: false
-speak_with_privmsg: false
-auto_reconnect: true
-target_nick:
-forbidden_nick:
-wait_before_speak: 0
-wait_before_info: 0.2
-name: Reudy1.9
-real_name: Bot Reudy
+:default_mode: 2
+:joining_message: こんにちは。
+:leaving_message: さようなら。
+:private_greeting:
+:disable_commands: false
+:disable_studying: false
+:respond_to_notice: false
+:respond_to_external: false
+:speak_with_privmsg: false
+:auto_reconnect: true
+:target_nick:
+:forbidden_nick:
+:wait_before_speak: 0
+:wait_before_info: 0.2
+:name: Reudy1.9
+:real_name: Bot Reudy

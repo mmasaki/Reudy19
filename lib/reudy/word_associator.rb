@@ -29,7 +29,8 @@ class WordAssociator
   #1単語から連想された1単語を返す
   def associate(wordStr)
     strs = @assocWordMap[wordStr]
-    return strs[rand(strs.size)] if strs && !strs.empty?
+    size = strs.size
+    return strs[rand(size)] if strs && size.nonzero?
     return nil
   end
   

@@ -4,8 +4,7 @@
 #日本語文字コード判定用コメント
 require $REUDY_DIR+'/wordset'
 
-KATAKANA = Regexp.compile("[ァ-ンー−][ァ-ンー−]") #カタカナ
-ALPHA_NUMERIC =  Regexp.compile("[a-zA-Z][a-zA-Z]") #英数
+KANA_AN = Regexp.compile("(?:[ァ-ンー−][ァ-ンー−]|[a-zA-Z][a-zA-Z])") #カタカナか英数
 
 module Gimite
 
@@ -19,13 +18,8 @@ class WordSearcher
   
   #文章がその単語を含んでいるか
   def hasWord(sentence, word)
-    return false if !sentence.include?(word.str) || !(sentence =~ Regexp.new("(.|^)" + Regexp.escape(word.str) + "(.|$)"))
-    preChar = $1
-    folChar = $2
-    wordAr = word.str
-    #カタカナ列や英文字列を途中で切るような単語は不可
-    return false if (preChar+wordAr[0]) =~ KATAKANA || (preChar+wordAr[0]) =~ ALPHA_NUMERIC\
-                || (wordAr[-1]+folChar) =~ KATAKANA || (wordAr[-1]+folChar) =~ ALPHA_NUMERIC
+    return false if !sentence.include?(word.str) || !sentence =~ /(.|^)#{Regexp.escape(word.str)}(.|$)/
+    return false if ($1+word.str[0]) =~ KANA_AN || (word.str[-1]+$2) =~ KANA_AN #カタカナ列や英文字列を途中で切るような単語は不可
     return true
   end
   

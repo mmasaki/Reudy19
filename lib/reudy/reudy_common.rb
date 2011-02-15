@@ -6,11 +6,10 @@
 module Gimite
 #デバッグ出力
 def dprint(caption, *objs)
-  strs = []
-  objs.each do |obj|
-    strs.push(obj.inspect)
+  objs.map! do |obj|
+    obj.inspect
   end
-  warn(caption + ": " + strs.join("/"))
+  warn("caption : #{objs.join("/")}")
 end
 
 #contの全ての要素に対してpredが真を返すか。

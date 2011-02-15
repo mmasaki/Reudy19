@@ -32,7 +32,7 @@ class Reudy
     @settingPath = dir + "/setting.yml"
     @settings = {}
     loadSettings
-    @autoSave = @settings["disable_auto_saving"] != "true"
+    @autoSave = @settings[:disable_auto_saving] != "true"
     
     #働き者のオブジェクト達を作る。
     warn "ログロード中..."
@@ -79,15 +79,15 @@ class Reudy
       @settings[key] = val
     end
     #メンバ変数を更新
-    @targetNickReg = Regexp.new(@settings["target_nick"] || "", Regexp::IGNORECASE)
+    @targetNickReg = Regexp.new(@settings[:target_nick] || "", Regexp::IGNORECASE)
     #これにマッチしないNickの発言は、ベース発言として使用不能
-    s = @settings["forbidden_nick"]
+    s = @settings[:forbidden_nick]
     s = "(?!.*)" if !s || s.empty?
       #何にもマッチしない正規表現のつもり
     @forbiddenNickReg= Regexp.new(s, Regexp::IGNORECASE)
       #これにマッチするNickの発言は、ベース発言として使用不能
-    @myNicks = @settings["nicks"]
-    changeMode(@settings["default_mode"].to_i)
+    @myNicks = @settings[:nicks]
+    changeMode(@settings[:default_mode].to_i)
   end
   
   #チャットクライアントの指定
@@ -183,7 +183,7 @@ class Reudy
     #自分自身の発言。
     #この発言者の発言は使えない。
     #最近そのベース発言を使った。
-    if (@settings["teacher_mode"] != "true" && size > @recentUnusedCt && msgN >= size - @recentUnusedCt)\
+    if (@settings[:teacher_mode] != "true" && size > @recentUnusedCt && msgN >= size - @recentUnusedCt)\
         || nick == "!"\
         || (!(nick =~ @targetNickReg) || nick =~ @forbiddenNickReg)\
         || @recentBaseMsgNs.include?(msgN)
@@ -197,7 +197,7 @@ class Reudy
   #ただし、ベース発言として使用できるものだけが対象。
   #該当するものが無ければ[nil,0]を返す。
   def responseTo(mid, debug = false)
-    if @settings["teacher_mode"]
+    if @settings[:teacher_mode]
       if isUsableBaseMsg(mid+1) && @log[mid].fromNick == "!input"
         return [mid+1, 20]
       else
@@ -464,7 +464,7 @@ class Reudy
     @lastSpeachInput = input
     @lastSpeach = output
     studyMsg("!", output) #自分の発言を記憶する。
-    @client.outputInfo("「#{input}」に反応した。") if @settings["teacher_mode"] == "true"
+    @client.outputInfo("「#{input}」に反応した。") if @settings[:teacher_mode] == "true"
     @attention.onSelfSpeak(@wordSearcher.searchWords(output))
     @client.speak(output)
   end
@@ -477,7 +477,7 @@ class Reudy
       loadSettings
       return "設定を更新しました。"
     end
-    return nil if @settings["disable_commands"] == "true" #コマンドが禁止されている場合
+    return nil if @settings[:disable_commands] == "true" #コマンドが禁止されている場合
     case input
     when /黙れ|黙りなさい|黙ってろ|沈黙モード/o
       return changeMode(0) ? "沈黙モードに切り替える。" : ""
@@ -521,8 +521,8 @@ class Reudy
   
   #通常の発言を学習。
   def studyMsg(fromNick, input)
-    return if @settings["disable_studying"] == "true"
-    if @settings["teacher_mode"] == "true"
+    return if @settings[:disable_studying] == "true"
+    if @settings[:teacher_mode] == "true"
       @fromNick = fromNick
       @extractor.processLine(input) #単語の抽出のみ。
     else
@@ -539,7 +539,7 @@ class Reudy
   def onAddMsg
     msg = @log[@log.size-1]
     @fromNick = msg.fromNick unless msg.fromNick == "!"
-    unless @settings["teacher_mode"] == "true"
+    unless @settings[:teacher_mode] == "true"
       #中の人モードでは、単語の抽出は別にやる。
       @extractor.processLine(msg.body)
     end
@@ -598,7 +598,7 @@ class Reudy
   
   #制御発言（infoでの発言）があった。
   def onControlMsg(str)
-    return if @settings["disable_studying"] == "true" || @settings["teacher_mode"] != "true"
+    return if @settings[:disable_studying] == "true" || @settings[:teacher_mode] != "true"
     if str =~ /^(.+)→→(.+)$/o
       input = $1
       output = $2

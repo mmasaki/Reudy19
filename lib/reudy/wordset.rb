@@ -33,7 +33,7 @@ class Word
   end
   
   def inspect
-    return "<Word: \"" + str + "\">"
+    return "<Word: \"#{str}\">"
   end
 
   attr_accessor :str
@@ -70,7 +70,7 @@ class WordSet
   def updateByOuterFile(outerFileName, wtmlManager)
     @outerFileName = outerFileName
     return if !File.exists?(@outerFileName) || (@innerFileTime && @innerFileTime >= File.mtime(@outerFileName))
-    warn @outerFileName + " が変更されたようです。単語を読み込み中..."
+    warn "@outerFileName が変更されたようです。単語を読み込み中..."
     addedWords = @addedWords
     @addedWords.clear
     isOldFormat = false
@@ -90,8 +90,7 @@ class WordSet
         n += 1
       end
     end
-    #initializeとupdateByOuterFileの間に追加された単語を外部ファイルに保存。
-    @addedWords = addedWords 
+    @addedWords = addedWords  #initializeとupdateByOuterFileの間に追加された単語を外部ファイルに保存。
     save
   end
   
@@ -99,8 +98,8 @@ class WordSet
   def addWord(str, author= "")
     word = Word.new(str, author)
     i = -1
-    @words.each_index do |j|
-      if str.include?(@words[j].str)
+    @words.each_with_index do |each_word,j|
+      if str.include?(each_word.str)
         i = j
         break
       end
@@ -152,7 +151,7 @@ class WordSet
     return base unless File.exist?(base)
     i = 2
     loop do
-      return name unless File.exist?("#{base}#{i}")
+      return name unless File.exist?(base+i)
       i += 1
     end
   end
