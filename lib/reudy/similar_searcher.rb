@@ -11,8 +11,7 @@ require $REUDY_DIR+'/message_log'
 module Gimite
 
 #類似発言検索器。
-class SimilarSearcher
-  
+class SimilarSearcher  
 =begin
   文尾@compLen文字が1文字違いの発言を類似発言とする。
   ただし、ひらがなと一部の記号のみが対象。
@@ -58,16 +57,14 @@ class SimilarSearcher
   def randomEach(cont, &block)
     return unless cont
     cont = cont.dup
-    size = cont.size
-    until size > 0
-      block.call(cont.delete_at(rand(size)))
-      size -= 1
+    cont.size.downto(0) do |i|
+      block.call(cont.delete_at(rand(i)))
     end
   end
   
   #発言が追加された。
   def onAddMsg
-    recordTail(-1)
+    recordTail(@log.size-1)
   end
   
   #ログがクリアされた。
@@ -110,9 +107,8 @@ class SimilarSearcher
   
   #@tailMapに追加。
   def addToTailMap(tail, lineN)
-    lineNs = @tailMap[tail]
-    if lineNs
-      @tailMap[tail] = lineNs+[lineN]
+    if @tailMap[tail]
+      @tailMap[tail] << lineN
     else
       @tailMap[tail] = [lineN]
     end

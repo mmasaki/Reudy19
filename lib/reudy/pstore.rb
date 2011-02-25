@@ -5,7 +5,7 @@ module Gimite
 
 class DB
   def initialize(*args)
-    @db = PStore.new("db")
+    @db = PStore.new($REUDY_DIR+"/db")
   end
   
   def [](key)
@@ -31,11 +31,9 @@ class DB
   end
   
   def empty?
-    t = nil
     @db.transaction do
-      t = @db.roots.empty?
+      return @db.roots.empty?
     end
-    return t
   end
   
   def clear

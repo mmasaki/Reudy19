@@ -17,8 +17,8 @@ class WordSearcher
   
   #文章がその単語を含んでいるか
   def hasWord(sentence, word)
-    return false if !sentence.include?(word.str) || !sentence =~ /(.|^)#{Regexp.escape(word.str)}(.|$)/
-    return false if ($1.to_s+word.str[0]) =~ KANA_AN || (word.str[-1]+$2.to_s) =~ KANA_AN #カタカナ列や英文字列を途中で切るような単語は不可
+    return false if (!sentence.include?(word.str) || !sentence =~ /(.|^)#{Regexp.escape(word.str)}(.|$)/) ||\
+                    (($1.to_s+word.str[0]) =~ KANA_AN || (word.str[-1]+$2.to_s) =~ KANA_AN) #カタカナ列や英文字列を途中で切るような単語は不可
     return true
   end
   
@@ -27,7 +27,7 @@ class WordSearcher
     words = []
     @wordSet.each do |word|
       if hasWord(sentence, word)
-        sentence = sentence.gsub(Regexp.new(Regexp.escape(word.str)), " ")
+        sentence.gsub!(Regexp.new(Regexp.escape(word.str)), " ")
         words.push(word)
       end
     end

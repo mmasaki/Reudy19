@@ -7,18 +7,17 @@ module Gimite
 class WordAssociator  
   def initialize(fileName)
     @fileName = fileName
+    @assocWordMap = {}
     loadFromFile
   end
   
   def loadFromFile
-    @assocWordMap = {}
-    return unless File.exists?(@fileName)
-    open(@fileName) do |file|
-      file.each_line do |line|
-        line.chomp!
-        strs = line.split(/\t/)
-        if strs.size >= 2
-          @assocWordMap[strs[0]] = strs[1..-1]
+    if File.exists?(@fileName)
+      open(@fileName) do |file|
+        file.each_line do |line|
+          line.chomp!
+          strs = line.split(/\t/)
+          @assocWordMap[strs.first] = strs[1..-1] if strs.size >= 2
         end
       end
     end
@@ -26,10 +25,11 @@ class WordAssociator
   
   #1単語から連想された1単語を返す
   def associate(wordStr)
-    strs = @assocWordMap[wordStr]
-    size = strs.size
-    return strs[rand(size)] if strs && size.nonzero?
-    return nil
+    if strs = @assocWordMap[wordStr]
+      return strs.sample
+    else
+      return nil
+    end
   end
   
   #1単語から連想された全ての単語を返す
