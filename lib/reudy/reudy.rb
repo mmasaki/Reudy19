@@ -26,6 +26,7 @@ class Reudy
         require $REUDY_DIR+'/tango-mecab' #単語の抽出にmecabを使用する
       rescue => ex
         warn ex.message
+        require $REUDY_DIR+'/tango-mgm'
       end
     else
       require $REUDY_DIR+'/tango-mgm'
@@ -37,7 +38,7 @@ class Reudy
     @autoSave = !@settings[:disable_auto_saving]
     
     #働き者のオブジェクト達を作る。
-    @log = MessageLog.new(dir + "/log.yml")
+    @log = MessageLog.new(dir + '/log.yml')
     @log.addObserver(self)
     warn "ログロード終了"
     @wordSet = WordSet.new(dir + '/words.dat')
@@ -63,16 +64,14 @@ class Reudy
     @thoughtFile.sync = true
     
     #外部ファイルをチェック。
-    @wordSet.updateByOuterFile(dir + "/words.txt", @wtmlManager)
+    @wordSet.updateByOuterFile(dir + '/words.txt', @wtmlManager)
     setWordAdoptBorder
   end
   
   #設定をファイルからロード
   def loadSettings
-    Kernel.open(@settingPath) do |file|
-      YAML.load_documents(file) do |y|
-        @settings = y
-      end
+    File.open(@settingPath) do |file|
+      @settings = YAML.load(file)
     end
     @fixedSettings.each do |key, val|
       @settings[key] = val

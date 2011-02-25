@@ -4,16 +4,14 @@ require 'pstore'
 module Gimite
 
 class DB
-  def initialize(*args)
-    @db = PStore.new($REUDY_DIR+"/db")
+  def initialize(filename)
+    @db = PStore.new(filename)
   end
   
   def [](key)
-    t = nil
     @db.transaction do
-      t = @db[key]
+      return @db[key]
     end
-    return t
   end
   
   def []=(key, value)
@@ -23,11 +21,9 @@ class DB
   end
   
   def keys
-    t = nil
     @db.transaction do
-      t = @db.roots
+      return @db.roots
     end
-    return t
   end
   
   def empty?
