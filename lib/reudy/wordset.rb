@@ -39,11 +39,11 @@ end
 class WordSet
   include Gimite, Enumerable
   
-  def initialize(innerFileName)
-    @innerFileName = innerFileName
+  def initialize(filename)
+    @filename = filename
     @addedWords = []
-    if File.exist?(@innerFileName)
-      File.open(@innerFileName) do |f|
+    if File.exist?(filename)
+      File.open(filename) do |f|
         @words = YAML.load(f)
       end
     end
@@ -54,23 +54,24 @@ class WordSet
   
   #単語を追加
   def addWord(str, author = "")
-    added_word = Word.new(str, author)
-    @words.each_with_index do |word,i|
-      if str.include?(word.str)
-        if word && word.str == str
-          return nil
-        else
-          @words[i, 0] = [added_word]
-          @addedWords << added_word
-          return added_word
-        end
-      end
+    word = Word.new(str, author)
+    i = 0
+    while i < @words.size
+      break if str.index(@words[i].str)
+      i += 1
+    end
+    if @words[i] && @words[i].str == str
+      return nil
+    else
+      @words[i, 0]= [word]
+      @addedWords.push(word)
+      return word
     end
   end
   
   #ファイルに保存
   def save
-    File.open(@innerFileName, "w") do |f|
+    File.open(@filename, "w") do |f|
       YAML.dump(@words, f)
     end
   end
