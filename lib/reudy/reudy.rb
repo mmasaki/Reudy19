@@ -41,7 +41,7 @@ class Reudy
     @log = MessageLog.new(dir + '/log.yml')
     @log.addObserver(self)
     warn "ログロード終了"
-    @wordSet = WordSet.new(dir + '/words.dat')
+    @wordSet = WordSet.new(dir + '/words.yml')
     @wordSearcher = WordSearcher.new(@wordSet)
     @wtmlManager = WordToMessageListManager.new(@wordSet, @log, @wordSearcher)
     @extractor = WordExtractor.new(14, method(:onAddWord))
@@ -63,8 +63,6 @@ class Reudy
     @thoughtFile = open(dir + "/thought.txt", "a") #思考過程を記録するファイル
     @thoughtFile.sync = true
     
-    #外部ファイルをチェック。
-    @wordSet.updateByOuterFile(dir + '/words.txt', @wtmlManager)
     setWordAdoptBorder
   end
   
@@ -175,20 +173,13 @@ class Reudy
   #発言をベース発言として使用可能か。
   def isUsableBaseMsg(msgN)
     return false if msgN >= size = @log.size #存在しない発言。
-    return unless msg = @log[msgN] #空行。削除された発言など。
+    return false unless msg = @log[msgN] #空行。削除された発言など。
+    return false if !@settings[:teacher_mode] && size > @recentUnusedCt && msgN >= size - @recentUnusedCt #発言が新しすぎる。（中の人モードでは無効）
     nick = msg.fromNick
-    #発言が新しすぎる。（中の人モードでは無効）
-    #自分自身の発言。
-    #この発言者の発言は使えない。
-    #最近そのベース発言を使った。
-    if (!@settings[:teacher_mode] && size > @recentUnusedCt && msgN >= size - @recentUnusedCt)\
-        || nick == "!"\
-        || (!(nick =~ @targetNickReg) || nick =~ @forbiddenNickReg)\
-        || @recentBaseMsgNs.include?(msgN)
-      return false 
-    else 
-      return true
-    end
+    return false if nick == "!" #自分自身の発言。
+    return false if !nick =~ @targetNickReg || nick =~ @forbiddenNickReg #この発言者の発言は使えない。
+    return false if @recentBaseMsgNs.include?(msgN) #最近そのベース発言を使った。
+    return true
   end
   
   #mid番目の発言への返事（と思われる発言）について、[発言番号,返事らしさ]を返す。
@@ -318,21 +309,29 @@ class Reudy
   #msgN番の発言を使ったベース発言の文字列。
   def getBaseMsgStr(msgN)
     str = @log[msgN].body
-    str = $1 if str =~ /^(.*)[＜＞]/o && $1.size >= str.size / 2 #文の後半に[＜＞]が有れば、その後ろはカット。
+    str = $1 if str =~ /^(.*)[＜＞]/o && $1.size >= str.size / 2 #文の後半に[＜＞]が有れば、その後ろはカット。a
     return str
   end
   
   #base内の既知単語をnewWordsで置換したものを返す。
   #toForceがfalseの場合、短すぎる文章になってしまった場合はnilを返す。
   def replaceWords(base, newWords, toForce)
+    base = base.dup
+    p newWords
+    @wordSet.each do |word|
+      break if newWords.empty?
+      base.gsub!(Regexp.new(Regexp.escape(word.str)),newWords.delete_at(rand(newWords.size)).str) if base.include?(word.str)
+    end
+    return base
+=begin
     #baseを単語の前後で分割してpartsにする。
     parts = [base]
     @wordSet.each do |word|
-      if @wordSearcher.hasWord(base, word) && canAdoptWord(word)
+      if @wordSearcher.hasWord(base, word) #&& canAdoptWord(word)
         newParts = []
         parts.each_with_index do |part,i|
           if (i % 2).zero?
-            while part =~ /^(.*?)#{Regexp.escape(word.str)}(.*)$/
+            while part =~ /^(.*?)#{Regexp.escape(word.str)}(.*)$/o
               newParts.push($1, word.str)
               part = $2
             end
@@ -342,6 +341,7 @@ class Reudy
         parts = newParts
       end
     end
+    p parts
     #先頭から2番目以降の単語の直前でカットしたりしなかったり。
     parts_size = parts.size
     wordCt =  (parts_size-1) / 2
@@ -377,6 +377,7 @@ class Reudy
         output = "(#{output}"
     end
     return output
+=end
   end
   
   #自由発言の選び方を記録する。
@@ -391,19 +392,19 @@ class Reudy
     simMsgN, baseMsgN = getBaseMsgUsingSimilarity(input)
     #まず、類似性を使ってベース発言を求める。
     if !@newInputWords.empty?
-      if baseMsgN
-        #パターン1: 単語有り＆類似発言有り。
+      if baseMsgN 
+        p "#パターン1: 単語有り＆類似発言有り。"
         output = replaceWords(getBaseMsgStr(baseMsgN), @inputWords, mustRespond)
         recordThought(1, simMsgN, baseMsgN, @newInputWords, output) if output
-      else
-        #パターン2: 単語有り＆類似発言無し。
+      else 
+        p "#パターン2: 単語有り＆類似発言無し。"
         simMsgN, baseMsgN = getBaseMsgUsingKeyword(@newInputWords)
         output = getBaseMsgStr(baseMsgN) if baseMsgN
         recordThought(2, simMsgN, baseMsgN, @newInputWords, output) if output
       end
     else
-      if baseMsgN
-        #パターン3: 単語無し＆類似発言有り。
+      if baseMsgN 
+        p "#パターン3: 単語無し＆類似発言有り。"
         output = getBaseMsgStr(baseMsgN)
         unless @wordSearcher.searchWords(output).empty?
           if mustRespond
@@ -413,18 +414,17 @@ class Reudy
           end
         end
         recordThought(3, simMsgN, baseMsgN, @inputWords, output) if output
-      else
-        #パターン4: 単語無し＆類似発言無し。
+      else 
+        p "#パターン4: 単語無し＆類似発言無し。"
         if mustRespond && !@inputWords.empty?
-          #最新でない入力語も使ってキーワード検索。
-          simMsgN, baseMsgN = getBaseMsgUsingKeyword(@inputWords)
+          simMsgN, baseMsgN = getBaseMsgUsingKeyword(@inputWords) #最新でない入力語も使ってキーワード検索。
           output = getBaseMsgStr(baseMsgN) if baseMsgN
           recordThought(4, simMsgN, baseMsgN, @inputWords, output) if output
         end
       end
     end
-    if mustRespond && !output
-      #ランダム発言
+    if mustRespond && !output 
+      p "#ランダム発言"
       log_size = @log.size
       2000.times do
         msgN = rand(log_size)

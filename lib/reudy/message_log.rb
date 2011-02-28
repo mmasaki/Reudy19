@@ -36,10 +36,10 @@ class MessageLog
   def addObserver(*observers)
     @observers += observers
   end
-  
+
   #n番目の発言
   def [](n)
-    n = @size + n if n < 0 #末尾からのインデックスに対応
+    n += @size if n < 0 #末尾からのインデックス
     File.open(@innerFileName) do |f|
       f.each_line("\n---") do |s|
         next if f.lineno <= n
@@ -52,7 +52,7 @@ class MessageLog
   #発言を追加
   def addMsg(fromNick, body, toOuter = true)
     File.open(@innerFileName,"a") do |f|
-      f.puts "---\n:fromNick: #{fromNick}\n:body: #{body}\n"
+      f.print YAML.dump({:fromNick => fromNick, :body => body})
     end
     @size += 1
     @observers.each do |observer|

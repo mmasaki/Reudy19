@@ -206,7 +206,7 @@ class BotIRCClient < IRCC
     else
       puts "Error: エラーコード #{code}"
     end
-    sendmess_raw("QUIT\r\n") #一度QUITして再接続。
+    sendmess("QUIT\r\n") #一度QUITして再接続。
   end
   
   private

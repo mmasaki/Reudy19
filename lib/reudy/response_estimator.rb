@@ -60,6 +60,7 @@ class ResponseEstimator
     @cache.clear if @cache.size >= @cacheLimit
     @cache[mid] = [resMid, prob]
     
+    p [resMid, prob]    
     return [resMid, prob]
   end 
 end

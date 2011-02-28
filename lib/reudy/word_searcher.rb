@@ -3,7 +3,7 @@
 
 require $REUDY_DIR+'/wordset'
 
-KANA_AN = Regexp.compile("[ァ-ンー−][ァ-ンー−]|[a-zA-Z][a-zA-Z]") #カタカナか英数
+KANA_AN = Regexp.compile("([ァ-ンー−][ァ-ンー−]|[a-zA-Z][a-zA-Z])") #カタカナか英数
 
 module Gimite
 
@@ -17,8 +17,9 @@ class WordSearcher
   
   #文章がその単語を含んでいるか
   def hasWord(sentence, word)
-    return false if (!sentence.include?(word.str) || !sentence =~ /(.|^)#{Regexp.escape(word.str)}(.|$)/) ||\
-                    (($1.to_s+word.str[0]) =~ KANA_AN || (word.str[-1]+$2.to_s) =~ KANA_AN) #カタカナ列や英文字列を途中で切るような単語は不可
+    return false unless sentence.include?(word.str) 
+    return false unless sentence =~ /(.|^)#{Regexp.escape(word.str)}(.|$)/
+    return false if ($1.to_s+word.str[0]) =~ KANA_AN || (word.str[-1]+$2.to_s) =~ KANA_AN #カタカナ列や英文字列を途中で切るような単語は不可
     return true
   end
   
@@ -27,7 +28,7 @@ class WordSearcher
     words = []
     @wordSet.each do |word|
       if hasWord(sentence, word)
-        sentence.gsub!(Regexp.new(Regexp.escape(word.str)), " ")
+#        sentence = sentence.gsub(/#{Regexp.escape(word.str)}/, " ")
         words.push(word)
       end
     end

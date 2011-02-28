@@ -33,7 +33,7 @@ class SimilarSearcher
     require $REUDY_DIR+"/#{db}"
     @log = log
     @log.addObserver(self)
-    @compLen = 6 #比較対象の文尾の長さ
+    @compLen = 3 #比較対象の文尾の長さ
     makeDictionary(fileName)
   end
   
@@ -46,7 +46,7 @@ class SimilarSearcher
       wtail = ws[-@compLen..-1]#文尾。
       randomEach(@tailMap[wtail], &block)
       0.upto(@compLen-1) do |i|
-        randomEach(@tailMap[wtail[0...i]+wtail[i+1..-1]], &block) #途中を1文字抜かしたもの。
+        randomEach(@tailMap[wtail[0...i] + wtail[i+1..-1] ], &block) #途中を1文字抜かしたもの。
       end
     else
       randomEach(@tailMap[ws], &block)
@@ -57,7 +57,7 @@ class SimilarSearcher
   def randomEach(cont, &block)
     return unless cont
     cont = cont.dup
-    cont.size.downto(0) do |i|
+    cont.size.downto(1) do |i|
       block.call(cont.delete_at(rand(i)))
     end
   end
@@ -83,7 +83,7 @@ class SimilarSearcher
     end
     if @tailMap.empty?
       warn "文尾辞書( #{fileName})を作成中..."
-      0.upto(@log.size-1) do |i|
+      0.upto(@log.size.pred) do |i|
         warn "#{i+1}行目..." if ((i+1) % 1000).zero?
         recordTail(i)
       end
