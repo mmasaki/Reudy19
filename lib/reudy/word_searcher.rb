@@ -28,7 +28,6 @@ class WordSearcher
     words = []
     @wordSet.each do |word|
       if hasWord(sentence, word)
-#        sentence = sentence.gsub(/#{Regexp.escape(word.str)}/, " ")
         words.push(word)
       end
     end
