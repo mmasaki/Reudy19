@@ -19,19 +19,13 @@ Thread.abort_on_exception = true
 opt = OptionParser.new
 
 directory = 'public'
-opt.on('-d DIRECTORY') do |v|
-  directory = v
-end
+opt.on('-d DIRECTORY') { |v| directory = v }
 
 db = 'pstore'
-opt.on('-db DB_TYPE') do |v|
-  db = v
-end
+opt.on('-db DB_TYPE') { |v| db = v }
 
 mecab = nil
-opt.on('-m','--mecab') do |v|
-  mecab = true
-end
+opt.on('-m','--mecab') { |v| mecab = true }
 
 opt.parse!(ARGV)
 
@@ -40,7 +34,7 @@ MessageLog.enable_update_check = !$OPT_f
 begin
   #IRC用ロイディを作成
   client= BotIRCClient.new(Reudy.new(directory,{},db,mecab))
-  client.processLoop()
+  client.processLoop
 rescue Interrupt
   #割り込み発生。
 end

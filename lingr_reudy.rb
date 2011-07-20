@@ -8,22 +8,24 @@ $LOAD_PATH << "./lib"
 $REUDY_DIR= "lib/reudy" if !defined?($REUDY_DIR) #スクリプトがあるディレクトリ
 Thread.abort_on_exception= true
 
-require 'getopts'
+require 'optparse'
 require $REUDY_DIR+'/bot_lingr2_client'
 require $REUDY_DIR+'/reudy'
 
-
 module Gimite
-
 
 $stdout.sync= true
 $stderr.sync= true
 
-getopts("f")
-if ARGV.size()!=1
-  $stderr.print( \
-    "Usage: ruby lingr_reudy.rb [-f] ident_dir\n\n" \
-    +"'ident_dir' is a directory which contains setting.txt, log.txt, etc.\n")
+opt = OptionParser.new
+
+opt.on('-f') { $OPT_f = v }
+
+opt.parse!(ARGV)
+
+if ARGV.size == 0
+  warn "Usage: ruby lingr_reudy.rb [-f] ident_dir\n\n" \
+      +"'ident_dir' is a directory which contains setting.txt, log.txt, etc.\n"
   exit(1)
 end
 

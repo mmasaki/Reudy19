@@ -14,7 +14,7 @@ class DB
   def [](key)
     str = @gdbm[key]
     return str && Marshal.load(str).freeze
-      #オブジェクトの中身を変更されてもDBに反映できないので、freeze()しておく
+    #オブジェクトの中身を変更されてもDBに反映できないので、freeze()しておく
   end
   
   def []=(key, value)
