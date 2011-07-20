@@ -29,8 +29,6 @@ opt.on('-m','--mecab') { |v| mecab = true }
 
 opt.parse!(ARGV)
 
-MessageLog.enable_update_check = !$OPT_f
-
 begin
   #IRC用ロイディを作成
   client= BotIRCClient.new(Reudy.new(directory,{},db,mecab))
