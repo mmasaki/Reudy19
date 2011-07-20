@@ -19,10 +19,10 @@ Thread.abort_on_exception = true
 opt = OptionParser.new
 
 directory = 'public'
-opt.on('-d DIRECTORY') { |v| directory = v }
+opt.on('-d DIRECTORY') { |v| directory = v; p v }
 
 db = 'pstore'
-opt.on('-db DB_TYPE') { |v| db = v }
+opt.on('--db DB_TYPE') { |v| db = v }
 
 mecab = nil
 opt.on('-m','--mecab') { |v| mecab = true }
