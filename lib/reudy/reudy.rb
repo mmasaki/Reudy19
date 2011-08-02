@@ -315,7 +315,8 @@ class Reudy
   
   #base内の既知単語をnewWordsで置換したものを返す。
   #toForceがfalseの場合、短すぎる文章になってしまった場合はnilを返す。
-  def replaceWords(base, newWords, toForce)
+  def replaceWords(base, newWords, toForce)a
+=begin
     base = base.dup
     p newWords
     @wordSet.each do |word|
@@ -323,7 +324,7 @@ class Reudy
       base.gsub!(Regexp.new(Regexp.escape(word.str)),newWords.delete_at(rand(newWords.size)).str) if base.include?(word.str)
     end
     return base
-=begin
+=end
     #baseを単語の前後で分割してpartsにする。
     parts = [base]
     @wordSet.each do |word|
@@ -377,7 +378,6 @@ class Reudy
         output = "(#{output}"
     end
     return output
-=end
   end
   
   #自由発言の選び方を記録する。
@@ -393,18 +393,15 @@ class Reudy
     #まず、類似性を使ってベース発言を求める。
     if !@newInputWords.empty?
       if baseMsgN 
-        p "#パターン1: 単語有り＆類似発言有り。"
         output = replaceWords(getBaseMsgStr(baseMsgN), @inputWords, mustRespond)
         recordThought(1, simMsgN, baseMsgN, @newInputWords, output) if output
       else 
-        p "#パターン2: 単語有り＆類似発言無し。"
         simMsgN, baseMsgN = getBaseMsgUsingKeyword(@newInputWords)
         output = getBaseMsgStr(baseMsgN) if baseMsgN
         recordThought(2, simMsgN, baseMsgN, @newInputWords, output) if output
       end
     else
       if baseMsgN 
-        p "#パターン3: 単語無し＆類似発言有り。"
         output = getBaseMsgStr(baseMsgN)
         unless @wordSearcher.searchWords(output).empty?
           if mustRespond
@@ -415,7 +412,6 @@ class Reudy
         end
         recordThought(3, simMsgN, baseMsgN, @inputWords, output) if output
       else 
-        p "#パターン4: 単語無し＆類似発言無し。"
         if mustRespond && !@inputWords.empty?
           simMsgN, baseMsgN = getBaseMsgUsingKeyword(@inputWords) #最新でない入力語も使ってキーワード検索。
           output = getBaseMsgStr(baseMsgN) if baseMsgN
@@ -424,7 +420,6 @@ class Reudy
       end
     end
     if mustRespond && !output 
-      p "#ランダム発言"
       log_size = @log.size
       2000.times do
         msgN = rand(log_size)

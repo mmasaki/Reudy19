@@ -31,7 +31,6 @@
 # IRCプロトコルについてはRFC2810-2813を参照のこと。日本語訳あります。
 #----------------------------------------------------------------------------
 #----------------------------------------------------------------------------
-require "kconv"
 
 class IRCC
   def initialize(sock,userinfo,internal_encoding="UTF-8",disp=$stdout,irc_encoding="ISO-2022-JP")
@@ -58,23 +57,15 @@ class IRCC
     @sock = sock
     @myprefix = nil
   end
-=begin 
-  def convert_encoding(buff,from,to)
-    return Kconv.kconv(buff,to,from) if to == Encoding::ISO_2022_JP || from == Encoding::ISO_2022_JP #変換にiso-2022-jpが絡む場合
-    return buff.encode!(to,from)
-    puts "convert_encoding"
-  end
-=end
+  
   # IRCの文字コードから内部コードに変換
   def irc_to_internal(buff)
-    return Kconv.kconv(buff,@internal_encoding,@irc_encoding) if @internal_encoding == Encoding::ISO_2022_JP || @irc_encoding == Encoding::ISO_2022_JP
-    return buff.encode!(@internal_encoding,@irc_encoding)
+    buff.encode!(@internal_encoding, @irc_encoding, { :invalid => :replace })
   end
 
   # 内部コードからIRCの文字コードに変換
   def internal_to_irc(buff)
-    return Kconv.kconv(buff,@irc_encoding,@internal_encoding) if @internal_encoding == Encoding::ISO_2022_JP || @irc_encoding == Encoding::ISO_2022_JP
-    return buff.encode!(@irc_encoding,@internal_encoding)
+    buff.encode!(@irc_encoding, @internal_encoding, { :invalid => :replace })
   end
 
   # チャンネル名をセット
@@ -125,17 +116,17 @@ class IRCC
     @disp.puts ">#{s}"
 
     prefix = ":unknown!unknown@unknown"
-    prefix,param = s.split(' ',2) if s[0..0] == ':'
-    nick,prefix = prefix.split('!',2)
+    prefix,param = s.split(' ', 2) if s[0..0] == ':'
+    nick,prefix = prefix.split('!', 2)
     nick.slice!(0)
     param = s unless param
 
-    param,param2 = param.split(/ :/,2)
+    param,param2 = param.split(/ :/, 2)
     param = param.split(' ')
     param << param2 if param2
 
     case param[0]
-    when 'PRIVMSG','NOTICE' # 通常のメッセージ(NOTICEへのBOTの反応は禁止されている)
+    when 'PRIVMSG', 'NOTICE' # 通常のメッセージ(NOTICEへのBOTの反応は禁止されている)
       if param[2][1..1] != "\001"
         mess = param[-1]
         if param[1].downcase == @irc_channel.downcase
@@ -144,7 +135,7 @@ class IRCC
           on_external_priv(param[0],nick,param[1],mess) # 今いるチャンネルの外からの発言
         end
       end
-    when '372','375'    # MOTD(Message Of The Day)
+    when '372', '375'    # MOTD(Message Of The Day)
       on_motd(param[-1])
     when '353'      # チャンネル参加メンバーのリスト
       @nicklist += param[-1].gsub(/@/,'').split
@@ -250,7 +241,7 @@ class IRCC
     else
       buff = "#{buff}#{mess}"
     end
-    @disp.puts(buff)
+    @disp.puts buff
     @disp.flush
   end
 
@@ -325,7 +316,7 @@ class IRCC
   
   # エラーの時の処理
   def on_error(code)
-    @disp.puts("Error: #{code}")
+    @disp.puts "Error: #{code}"
     sendmess("QUIT\r\n")  # 面倒なので終了にしている
   end
 end
