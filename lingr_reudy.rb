@@ -1,43 +1,32 @@
-#Copyright (C) 2003 Gimite 市川 <gimite@mx12.freecom.ne.jp>
+#encoding: utf-8
+$REUDY_DIR= "./lib/reudy" unless defined?($REUDY_DIR) #スクリプトがあるディレクトリ
 
-#日本語文字コード判定用コメント
-
-$KCODE= "EUC"
-$OUT_KCODE= "UTF8" #出力文字コード
-$LOAD_PATH << "./lib"
-$REUDY_DIR= "lib/reudy" if !defined?($REUDY_DIR) #スクリプトがあるディレクトリ
-Thread.abort_on_exception= true
-
-require 'optparse'
-require $REUDY_DIR+'/bot_lingr2_client'
+require 'sinatra'
+require 'json'
 require $REUDY_DIR+'/reudy'
 
-module Gimite
+class Lingr
+  def initialize
+    @message = ""
+  end
 
-$stdout.sync= true
-$stderr.sync= true
-
-opt = OptionParser.new
-
-opt.on('-f') { $OPT_f = v }
-
-opt.parse!(ARGV)
-
-if ARGV.size == 0
-  warn "Usage: ruby lingr_reudy.rb [-f] ident_dir\n\n" \
-      +"'ident_dir' is a directory which contains setting.txt, log.txt, etc.\n"
-  exit(1)
+  def speak(n)
+    @message = n
+  end
+  
+  attr_accessor :message
 end
 
-MessageLog.enable_update_check= !$OPT_f
+include Gimite
 
-begin
-  #Lingr用ロイディを作成
-  client= BotLingr2Client.new(Reudy.new(ARGV[0]))
-  client.processLoop()
-rescue Interrupt
-  #割り込み発生。
+reudy = Reudy.new("public")
+lingr = Lingr.new
+reudy.client = lingr
+
+post '/' do
+  content_type :text
+  data = JSON.parse(params[:json])
+#  puts "nick: #{data["events"][0]["message"]["nickname"]} text: #{data["events"][0]["message"]["text"]}"
+  reudy.onOtherSpeak(data["events"][0]["message"]["nickname"],data["events"][0]["message"]["text"])
+  return lingr.message
 end
-
-
-end #module Gimite
