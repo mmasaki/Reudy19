@@ -1,4 +1,3 @@
-#encoding: utf-8
 $REUDY_DIR= "./lib/reudy" unless defined?($REUDY_DIR) #スクリプトがあるディレクトリ
 
 require 'sinatra'

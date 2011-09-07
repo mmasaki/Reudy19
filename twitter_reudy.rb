@@ -1,4 +1,3 @@
-#encoding:utf-8
 $REUDY_DIR= "./lib/reudy" unless defined?($REUDY_DIR) #スクリプトがあるディレクトリ
 CONSUMER = { #get it in http://twitter.com/oauth_client/new
       :key => "Key",

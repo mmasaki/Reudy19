@@ -11,6 +11,8 @@ require $REUDY_DIR+'/response_estimator'
 require $REUDY_DIR+'/reudy_common'
 require 'yaml'
 
+STDOUT.set_encoding(Encoding.default_external)
+
 module Gimite
 
 class Reudy

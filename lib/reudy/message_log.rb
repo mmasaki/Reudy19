@@ -1,10 +1,8 @@
-#encoding:utf-8
 #Copyright (C) 2003 Gimite 市川 <gimite@mx12.freecom.ne.jp>
 
 require $REUDY_DIR+'/reudy_common'
 require 'psych' #UTF-8をバイナリで書き出さないようにする
 require "yaml"
-require 'yaml/store'
 
 module Gimite
 

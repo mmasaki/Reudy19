@@ -19,3 +19,15 @@
 ---
 :body: なんでやねん。
 :fromNick: Default
+---
+:fromNick: test
+:body: こんにちは。
+---
+:fromNick: ! '!'
+:body: おはよう。
+---
+:fromNick: test
+:body: こんにちは。
+---
+:fromNick: ! '!'
+:body: おはよう。
