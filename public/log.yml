@@ -31,3 +31,12 @@
 ---
 :fromNick: ! '!'
 :body: おはよう。
+---
+:fromNick: test
+:body: はい
+---
+:fromNick: ! '!'
+:body: なんでやねん。
+---
+:fromNick: test
+:body: exit

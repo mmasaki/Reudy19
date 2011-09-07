@@ -27,8 +27,7 @@ class StdioClient
   end
   
   def loop
-    $stdin.each_line do |line|
-#      $stderr.print("> "+line)#仮
+    STDIN.each_line do |line|
       line = line.chomp
       if line.empty?
         @user.onSilent
@@ -77,7 +76,7 @@ end
 
 opt.parse!(ARGV)
 
-$stdout.sync = true
+STDOUT.sync = true
 client = StdioClient.new(Reudy.new(directory,{},db,mecab),nick) #標準入出力用ロイディを作成
 client.loop
 
