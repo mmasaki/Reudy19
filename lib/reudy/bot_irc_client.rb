@@ -22,7 +22,7 @@ class BotIRCClient < IRCC
     @nick = @user.settings[:nick]
     @user.client = self
     @user.onBeginConnecting
-    pass = @user.settings[:login_password]
+    pass = @user.settings[:login_password].to_s
     option = {
       'user'=>@user.settings[:name], \
       'realname'=>@user.settings[:real_name], \
