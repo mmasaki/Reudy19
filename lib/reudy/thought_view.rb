@@ -1,4 +1,3 @@
-#encoding:utf-8
 $REUDY_DIR= "." unless defined?($REUDY_DIR) #スクリプトがあるディレクトリ
 
 require "./message_log"
@@ -10,7 +9,7 @@ module Gimite
 log = MessageLog.new(ARGV[0] + "/log.dat")
 
 data = []
-open(ARGV[0] + "/thought.txt") do |f|
+File.open(ARGV[0] + "/thought.txt") do |f|
   f.each_line do |line|
     line.chomp!
     fields = line.split(/\t/)
@@ -33,7 +32,7 @@ end
 
 extend(ERB::Util)
 
-template = open("thought_view.html"){ |f| f.read }
+template = File.open("thought_view.html"){|f| f.read }
 ERB.new(template).run(binding)
 
 end

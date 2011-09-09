@@ -42,7 +42,7 @@ class WordExtractor
 
   # 単語候補のリストを整理して返す
   def getCandList
-    candList = @candList
+    candList = @candList.dup
     candList.uniq!
     candList.flatten!
     candList.compact!
@@ -86,16 +86,11 @@ class WordExtractor
   # 単語として適切かどうか判定する
   # 前後の文字列も参考にする
   # 不適だとnilを返す
-  def checkWordCand(word,prestr='',poststr='')
-    unless prestr
-      prestr = ''
-      poststr = ''
-    end
-    word = word.dup
-
+  def checkWordCand(word, prestr='', poststr='')
     unless  ((prestr.empty? || prestr =~ /[、。．，！？（）・…]$/) && poststr =~ /^[はが]([^ぁ-ん]|$)/ \
-            &&((word + poststr[0..0]) !~ /(?:では|だが|には|のが)$/) &&(word =~ /^[ぁ-んー]+$/ || word =~ /^[^ぁ-ん]/) \
-            && word.size >= 3) || (prestr =~ /[＞＜]$/ && poststr.empty?)
+            &&((word + poststr[0..0]) !~ /(?:では|だが|には|のが)$/) && (word =~ /^[ぁ-んー]+$/ || word =~ /^[^ぁ-ん]/) \
+            && word.size >= 3) \
+            || (prestr =~ /[＞＜]$/ && poststr.empty?)
       word = wordFilter1(word)
     end
     return wordFilter2(word)
@@ -122,47 +117,36 @@ class WordExtractor
   # 文字列から単語侯補を獲得する
   # 主にマルチバイト文字列(日本語文字列)用だが、
   # 一応シングルバイト文字列を食わせても大丈夫なはず
-  def extractCands(s)
-    s = s.dup
-    a = s.scan(/[-_0-9a-zA-Z]+/) #文字列から英数字の連続を取り除き、配列に格納する
-    a += s.scan(/[ー−ァ-ン]+/) #カタカナに対して同様に
-    
-    a.each do |t|
-      s.delete!(t)
-    end
+  def extractCands(str)
+    str = str.dup
 
-    result = []
-    a.each do |str| #英数字、カタカナの連続はそのままcheckWordCandにかける
-      cand = checkWordCand(str)
-      result << cand if cand
-    end
+    intact = str.scan(/[-_0-9a-zA-Z]+|[ー－ァ-ン]+/) #文字列から英数字やカタカナの連続を取り出し、配列に格納する
+    str.delete!(*intact) unless intact.empty?
 
-    s_size = s.size - 1
-    0.upto(s_size) do |i| #それ以外
-      i.upto(s_size) do |j|
-        cand = checkWordCand(s[i..j],s[0...i],s[j+1..-1])
+    result = intact.select{|str| checkWordCand(str) } #英数字、カタカナの連続はそのままcheckWordCandにかける
+
+    str_size = str.size
+    0.upto(str_size) do |i| #それ以外
+      i.upto(str_size) do |j|
+        cand = checkWordCand(str[i..j], str[0...i], str[j+1..-1])
         result << cand if cand
       end
     end
-
+    
     return result
   end
 
   # 単語リスト中の包含関係にあるものを削除して単語リストを最適化する
   def optimizeWordList(wordcand)
-    wordcand_size = wordcand.size - 1
-    0.upto(wordcand_size-1) do |i|
-      next unless wordcand[i]
-      (i+1).upto(wordcand_size) do |j|
-        next unless wordcand[j]
-        if wordcand[j].include?(wordcand[i])
-          wordcand[i] = nil
-          break
-        end
-        wordcand[j] = nil if wordcand[i].include?(wordcand[j])
+    wordcand.combination(2) do |i,j|
+      if j.include?(i)
+        i.clear
+      elsif i.include?(j)
+        j.clear
       end
     end
-    return wordcand.compact
+    wordcand.reject!{|word| word.empty? }
+    return wordcand
   end
 
   # 文中で使われている単語を取得
@@ -194,7 +178,7 @@ class WordExtractor
   # 単語侯補のリストを更新する
   def renewCandList(line)
     @candList.shift
-    @candList << extractCands(line)
+    @candList.push(extractCands(line))
   end
 
   # 単語取得・単語候補リスト更新を1行分処理する

@@ -15,11 +15,9 @@ class WordExtractor
   # 文中で使われている単語を取得
   def extractWords(line,words=[])
     n = @m.parseToNode(line)
-    n.next #文頭を飛ばす
 
-    while n do
+    while n = n.next do
       words << n.surface.force_encoding(Encoding::UTF_8) if !n.surface.empty? && POS_ID.include?(n.posid)
-      n = n.next
     end
 
     if @onAddWord
