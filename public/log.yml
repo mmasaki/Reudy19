@@ -40,3 +40,42 @@
 ---
 :fromNick: test
 :body: exit
+---
+:fromNick: Glass_saga
+:body: hi
+---
+:fromNick: ! '!'
+:body: exit
+---
+:fromNick: Glass_saga
+:body: えっ
+---
+:fromNick: ! '!'
+:body: こんにちは。
+---
+:fromNick: Glass_saga
+:body: どうもー
+---
+:fromNick: ! '!'
+:body: hi
+---
+:fromNick: Glass_saga
+:body: good
+---
+:fromNick: ! '!'
+:body: おはよう。
+---
+:fromNick: Glass_saga
+:body: hi
+---
+:fromNick: Glass_saga
+:body: hi
+---
+:fromNick: ! '!'
+:body: こんにちは。
+---
+:fromNick: Glass_saga
+:body: どうも。
+---
+:fromNick: ! '!'
+:body: hi

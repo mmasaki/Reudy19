@@ -14,7 +14,7 @@ class BotIRCClient < IRCC
   
   SILENT_SECOND = 20.0 #沈黙が続いたと判断する秒数。
   
-  def initialize(user, logOut = $stdout)
+  def initialize(user, logOut = STDOUT)
     @user = user
     @isExitting = false
     @channel = @user.settings[:channel]
@@ -22,14 +22,13 @@ class BotIRCClient < IRCC
     @nick = @user.settings[:nick]
     @user.client = self
     @user.onBeginConnecting
-    pass = @user.settings[:login_password].to_s
     option = {
       'user'=>@user.settings[:name], \
       'realname'=>@user.settings[:real_name], \
-      'pass'=>pass, \
+      'pass'=>@user.settings[:login_password].to_s, \
       'nick'=>@nick, \
       'channel'=>@channel, \
-      'channel_key'=>@user.settings[:channel_key] \
+      'channel_key'=>@user.settings[:channel_key].to_s \
     }
     super(nil, option, __ENCODING__.to_s, logOut, @user.settings[:encoding] || "ISO-2022-JP")
   end
@@ -215,9 +214,7 @@ class BotIRCClient < IRCC
   def receiveProcess
     while args = popMessage
       while args
-        if @user.settings[:wait_before_speak]
-          sleep(@user.settings[:wait_before_speak].to_f * (0.5 + rand))
-        end
+        sleep(@user.settings[:wait_before_speak].to_f * (0.5 + rand)) if @user.settings[:wait_before_speak]
         if @receiveQue.empty?
           @user.onOtherSpeak(*(args+[false]))
           break
@@ -235,11 +232,9 @@ class BotIRCClient < IRCC
   #受信してキューにたまっている発言を取り出す。
   #制御発言があれば優先して処理する。
   def popMessage
-    while true
+    loop do
       mess = @receiveQue.pop
-      until @controlQue.empty?
-        @user.onControlMsg(@controlQue.pop)
-      end
+      @user.onControlMsg(@controlQue.pop) until @controlQue.empty?
       return mess if mess != :nop
     end
   end
@@ -247,7 +242,7 @@ class BotIRCClient < IRCC
   #定期的に意味の無いメッセージを送り、通信が切れてないか確かめる。
   #通信が切れたら、sock.getsのブロック状態を解除させるためにsock.closeする。
   def pingProcess
-    while true
+    loop do
       sleep(SILENT_SECOND)
       begin
         sendmess("TOPIC #{@channel}\r\n")

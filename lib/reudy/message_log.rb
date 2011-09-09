@@ -32,17 +32,18 @@ class MessageLog
   
   #観察者を追加。
   def addObserver(*observers)
-    @observers += observers
+    @observers.concat(observers)
   end
 
   #n番目の発言
   def [](n)
     n += @size if n < 0 #末尾からのインデックス
     File.open(@innerFileName) do |f|
-      f.each_line("\n---") do |s|
-        next if f.lineno <= n
-        m = YAML.load(s)
+      if line = f.lines("\n---").find{ f.lineno > n }
+        m = YAML.load(line)
         return Message.new(m[:fromNick], m[:body])
+      else
+        return nil
       end
     end
   end
@@ -60,7 +61,7 @@ class MessageLog
  
   private
   
-  #内部データをクリア
+  #内部データをクリア(デフォルトのログのみ残す)
   def clear
     default = ""
     File.open(@innerFileName) do |f|
