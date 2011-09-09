@@ -6,6 +6,8 @@
 
 :host: irc.ircnet.ne.jp
 :port: 6668
+# Reudy1.9の内部ではここに入力された文字列でEncoding.findします。
+# UTF-8を指定する場合は"UTF-8"として下さい。その他のエンコーディングに関しては、irbなどでEncoding.name_listを参照して下さい。
 :encoding: ISO-2022-JP
 :channel: "#reudy_test"
 :info_channel: "#reudy_test"
