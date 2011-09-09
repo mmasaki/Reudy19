@@ -163,11 +163,11 @@ module Gimite
     #単語がこれより多く出現してたら置換などの対象にしない、という
     #ボーダを求めて@wordAdoptBorderに代入。
     def setWordAdoptBorder
-      if @wordSetempty?
+      msgCts = @wordSet.map{ |w| w.mids.size }
+      if msgCts.empty?
         @wordAdoptBorder = 0
         return
       end
-      msgCts = @wordSet.map{ |w| w.mids.size }
       msgCts.sort!{|i| -i } #逆順ソート
       @wordAdoptBorder = msgCts[msgCts.size / 50]
     end
