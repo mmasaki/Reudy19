@@ -1,9 +1,10 @@
 #ncoding:utf-8
 #Copyright (C) 2003 Gimite 市川 <gimite@mx12.freecom.ne.jp>
+#Modified by Glass_saga <glass.saga@gmail.com>
 
 require $REUDY_DIR+'/wordset'
 
-KANA_AN = Regexp.compile("([ァ-ンー−][ァ-ンー−]|[a-zA-Z][a-zA-Z])") #カタカナか英数
+KANA_AN = Regexp.compile("([ァ-ンー−][ァ-ンー−]|[a-zA-Z][a-zA-Z])") # #カタカナ又は英数
 
 module Gimite
   #文中から既知の単語を探す
@@ -24,7 +25,7 @@ module Gimite
     
     #文中から既知の単語を探す
     def searchWords(sentence)
-      return @wordSet.select{|word| hasWord(sentence, word) }
+      @wordSet.select{|word| hasWord(sentence, word) }
     end
   end
-end #module Gimite
+end

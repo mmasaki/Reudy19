@@ -7,6 +7,7 @@
 #
 #      Original works by mita-K
 #      Extended by Gimite/Meister
+#      Modified by Glass_saga(glass.saga@gmail.com)
 #
 #  2003.06.06                 勝手にクラス化(Meister)
 #                             基本的に文字コードに依存しないように、
@@ -24,6 +25,7 @@
 #                             checkWordCand()に渡すprestrとpoststrを配列から文字列に変更
 #                             主語っぽいものの検出を強化
 #                             EUC用に書き換えたので、必要に応じて戻してください…
+#  2011.09.09                 Ruby1.9に対応(Glass_saga)
 #
 #----------------------------------------------------------------------------
 #----------------------------------------------------------------------------
@@ -33,8 +35,7 @@ class WordExtractor
   # コンストラクタ
   # WordExtractor(単語候補リストを保持する長さ,単語追加時のコールバック)
   def initialize(candlistlength=7,onaddword=nil)
-    # 単語候補のリスト
-    @candList = Array.new(candlistlength,[])
+    @candList = Array.new(candlistlength,[]) # 単語候補のリスト
     @onAddWord = onaddword
   end
 

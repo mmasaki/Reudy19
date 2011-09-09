@@ -4,6 +4,7 @@
 #
 #      Programed by NAKAUE.T (Meister)
 #      Modified by Gimite 市川
+#      Modified by Glass_saga(glass.saga@gmail.com)
 #
 #  2003.05.04  Version 1.0.0   使ってくれる人が増えたのでソースを整理
 #  2003.05.10  Version 1.1.0   NICK処理追加
@@ -20,6 +21,7 @@
 #  2004.01.01  Version 2.0.2   インスタンス生成後にソケットを渡せるようにした
 #  2004.03.03  Version 2.0.3g  接続が切れた時に、IRCC#connectで再接続できるように
 #                              IRCエラーを処理するIRCC#on_errorを追加(Gimite)
+#  2011.09.09  Version 2 0.4   Ruby1.9に対応(Glass_saga)
 #
 #
 # このソフトウェアはPublic Domain Softwareです。

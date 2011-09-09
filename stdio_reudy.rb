@@ -1,9 +1,10 @@
 #Copyright (C) 2003 Gimite 市川 <gimite@mx12.freecom.ne.jp>
+#Modified by Glass_saga <glass.saga@gmail.com>
 
 #日本語文字コード判定用コメント
 
 $OUT_KCODE= "UTF-8" #出力文字コード
-$REUDY_DIR= "./lib/reudy" unless defined?($REUDY_DIR) #スクリプトがあるディレクトリ
+$REUDY_DIR= "./lib/reudy" unless defined?($REUDY_DIR)
 
 require 'optparse'
 require $REUDY_DIR+'/bot_irc_client'

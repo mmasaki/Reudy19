@@ -1,4 +1,5 @@
 #Copyright (C) 2003 Gimite 市川 <gimite@mx12.freecom.ne.jp>
+#Modified by Glass_saga <glass.saga@gmail.com>
 
 module Gimite
   #単語連想器
@@ -32,7 +33,7 @@ module Gimite
     
     #1単語から連想された全ての単語を返す
     def associateAll(word_str)
-      return @assoc_word_map[word_str]
+      @assoc_word_map[word_str]
     end  
   end
 end

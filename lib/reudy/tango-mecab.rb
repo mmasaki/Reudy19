@@ -1,5 +1,6 @@
 #encoding:utf-8
-# 文中から単語(らしき文字列)を探し出す
+#Copyright (C) 2011 Glass_saga <glass.saga@gmail.com>
+
 require 'MeCab'
 
 class WordExtractor

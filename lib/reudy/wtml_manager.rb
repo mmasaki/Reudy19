@@ -1,4 +1,5 @@
 #Copyright (C) 2003 Gimite 市川 <gimite@mx12.freecom.ne.jp>
+#Modified by Glass_saga <glass.saga@gmail.com>
 
 require $REUDY_DIR+'/wordset'
 require $REUDY_DIR+'/message_log'
@@ -30,9 +31,9 @@ module Gimite
     #単語wordにmidsを付ける。
     def attachMsgList(word)
       word.mids = []
-      @log.each_index do |i|
-        word.mids.push(i) if @wordSearcher.hasWord(@log[i].body, word)
+      @log.each_with_index do |log, i|
+        word.mids.push(i) if @wordSearcher.hasWord(log.body, word)
       end
     end
   end
-end #module Gimite
+end
