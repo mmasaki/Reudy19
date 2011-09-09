@@ -1,4 +1,4 @@
-$REUDY_DIR= "./lib/reudy" unless defined?($REUDY_DIR) #スクリプトがあるディレクトリ
+$REUDY_DIR= "./lib/reudy" unless defined?($REUDY_DIR)
 
 require 'sinatra'
 require 'json'
@@ -25,7 +25,6 @@ reudy.client = lingr
 post '/' do
   content_type :text
   data = JSON.parse(params[:json])
-#  puts "nick: #{data["events"][0]["message"]["nickname"]} text: #{data["events"][0]["message"]["text"]}"
   reudy.onOtherSpeak(data["events"][0]["message"]["nickname"],data["events"][0]["message"]["text"])
   return lingr.message
 end
