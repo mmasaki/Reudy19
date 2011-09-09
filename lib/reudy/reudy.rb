@@ -11,7 +11,7 @@ require $REUDY_DIR+'/response_estimator'
 require $REUDY_DIR+'/reudy_common'
 require 'yaml'
 
-if Encoding.default_external != __ENCODING__
+unless Encoding.default_external == __ENCODING__
   STDOUT.set_encoding(Encoding.default_external, __ENCODING__)
   STDERR.set_encoding(Encoding.default_external, __ENCODING__)
   STDIN.set_encoding(Encoding.default_external, __ENCODING__)

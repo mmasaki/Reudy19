@@ -33,19 +33,21 @@
 #----------------------------------------------------------------------------
 
 class IRCC
-  def initialize(sock,userinfo,internal_encoding="UTF-8",disp=$stdout,irc_encoding="ISO-2022-JP")
-    @sock = sock
+  def initialize(sock, userinfo, internal_encoding, disp=STDOUT, irc_encoding)
+    if sock
+      @sock = sock
+      @sock.set_encoding(@irc_encoding, @internal_encoding) unless @irc_encoding == @internal_encoding
+    end
     @userinfo = userinfo
     @irc_nick = @userinfo['nick']
-    setchannel(@userinfo['channel'])    # 自動でJOINするチャンネル
-                                        # このチャンネルを抜けると終了する(仕様)
+    @irc_channel = @userinfo['channel'] # 自動でJOINするチャンネル。このチャンネルを抜けると終了する(仕様)
     @channel_key = @userinfo['channel_key'] || ''
 
     @nicklist = []
     @joined_channel = nil
 
-    @internal_encoding = Encoding.find(internal_encoding)
-    @irc_encoding = Encoding.find(irc_encoding)
+    @internal_encoding = internal_encoding ? Encoding.find(internal_encoding) : Encoding::UTF_8
+    @irc_encoding = irc_encoding ? Encoding.find(irc_encoding) : Encoding::ISO_2022_JP
 
     @disp = disp
   end
@@ -55,42 +57,26 @@ class IRCC
   # インスタンス生成後のソケット接続
   def connect(sock)
     @sock = sock
+    @sock.set_encoding(@irc_encoding, @internal_encoding) unless @irc_encoding == @internal_encoding
     @myprefix = nil
-  end
-  
-  # IRCの文字コードから内部コードに変換
-  def irc_to_internal(buff)
-    buff.encode!(@internal_encoding, @irc_encoding, { :invalid => :replace })
-  end
-
-  # 内部コードからIRCの文字コードに変換
-  def internal_to_irc(buff)
-    buff.encode!(@irc_encoding, @internal_encoding, { :invalid => :replace })
-  end
-
-  # チャンネル名をセット
-  def setchannel(channel)
-    @irc_channel = channel
   end
 
   # メッセージを送信(生)
   def sendmess(mess)
-    @sock.print(internal_to_irc(mess))
+    @sock.print(mess)
     @disp.puts(mess.chop)
   end
 
   # メッセージの送信(通常のPRIVMSGで)
-  def sendpriv(mess)
-    mess = '' unless mess
-    dispmess(">#{@irc_nick}<",mess)
+  def sendpriv(mess="")
+    dispmess(">#{@irc_nick}<", mess)
     buff = "PRIVMSG #{@irc_channel} :#{mess}"
     sendmess(buff + "\r\n")
   end
 
   # メッセージの送信(NOTICEで)
-  def sendnotice(mess)
-    mess = '' unless mess
-    dispmess(">#{@irc_nick}<",mess)
+  def sendnotice(mess="")
+    dispmess(">#{@irc_nick}<", mess)
     buff = "NOTICE #{@irc_channel} :#{mess}"
     sendmess(buff + "\r\n")
   end
@@ -98,8 +84,8 @@ class IRCC
   # 別のチャンネルに移動
   def movechannel(channel)
     old_channel = @irc_channel
-    setchannel(channel)
-      #PARTの前にこれを書き換えておかないとQUITしてしまう
+    @irc_channel = channel
+    #PARTの前にこれを書き換えておかないとQUITしてしまう
     sendmess("PART #{old_channel}\r\n")
     sendmess("JOIN #{@irc_channel} #{@channel_key}\r\n")
   end
@@ -112,16 +98,15 @@ class IRCC
   # サーバから受け取ったメッセージを処理
   def on_recv(s)
     s.chomp!
-    s = irc_to_internal(s)
     @disp.puts ">#{s}"
 
     prefix = ":unknown!unknown@unknown"
-    prefix,param = s.split(' ', 2) if s[0..0] == ':'
-    nick,prefix = prefix.split('!', 2)
+    prefix, param = s.split(' ', 2) if s[0..0] == ':'
+    nick, prefix = prefix.split('!', 2)
     nick.slice!(0)
     param = s unless param
 
-    param,param2 = param.split(/ :/, 2)
+    param, param2 = param.split(/ :/, 2)
     param = param.split(' ')
     param << param2 if param2
 
@@ -130,9 +115,9 @@ class IRCC
       if param[2][1..1] != "\001"
         mess = param[-1]
         if param[1].downcase == @irc_channel.downcase
-          on_priv(param[0],nick,mess)
+          on_priv(param[0], nick, mess)
         else
-          on_external_priv(param[0],nick,param[1],mess) # 今いるチャンネルの外からの発言
+          on_external_priv(param[0], nick, param[1], mess) # 今いるチャンネルの外からの発言
         end
       end
     when '372', '375'    # MOTD(Message Of The Day)
@@ -146,7 +131,7 @@ class IRCC
         on_myjoin(channel)
       else
         @nicklist |= [nick]
-        on_join(nick,channel)
+        on_join(nick, channel)
       end
     when 'PART' # 誰かがチャンネルから抜けた
       channel = param[1]
@@ -222,11 +207,9 @@ class IRCC
   # 接続確立時の処理
   def on_connect
     @disp.puts "connect"
-    dispmess(nil,'Login...')
+    dispmess(nil, 'Login...')
 
-    if @userinfo['pass'] && !@userinfo['pass'].empty?
-      sendmess("PASS #{@userinfo['pass']}\r\n")
-    end
+    sendmess("PASS #{@userinfo['pass']}\r\n") if @userinfo['pass'] && !@userinfo['pass'].empty?
     sendmess("NICK #{@irc_nick}\r\n")
     sendmess("USER #{@userinfo['user']} 0 * :#{@userinfo['realname']}\r\n")
   end
@@ -242,7 +225,6 @@ class IRCC
       buff = "#{buff}#{mess}"
     end
     @disp.puts buff
-    @disp.flush
   end
 
   # 接続・認証が完了し、チャンネルにJOINできる

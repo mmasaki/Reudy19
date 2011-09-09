@@ -152,25 +152,18 @@ class WordExtractor
   # 文中で使われている単語を取得
   def extractWords(line,words=[])
     wordcand = getCandList.select {|word| line.include?(word)} # 単語侯補が文章中に使われてたら単語にする
+
     # 新しく加わる単語同士に包含関係があったら短いほうを消去する
     # 例えば「なると」という単語が登録される時に
     # 「なる」「ると」が同時に単語と認識されてしまうのを防ぐ。
     wordcand = optimizeWordList(wordcand) unless wordcand.empty?
     
     # 禁則処理
-    wordcand2 = []
-    wordcand.each do |word|
-      word2 = checkWord(word)
-      wordcand2 << word2 if word2
-    end
+    wordcand2 = wordcand.select{|word| checkWord(word) }
     
     words = words | wordcand2 # 新しい単語を本当に単語として認定する。ただしダブる場合は片方を消す。
  
-    if @onAddWord
-      words.each do |w|
-        @onAddWord.call(w)
-      end
-    end
+    words.each{|w| @onAddWord.call(w) } if @onAddWord
 
     return words
   end

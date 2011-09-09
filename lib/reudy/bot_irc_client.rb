@@ -97,7 +97,7 @@ class BotIRCClient < IRCC
   #チャンネルを変更。切断中はこっちを使う。
   def setChannel(channel)
     @channel = channel
-    setchannel(@channel)
+    @irc_channel = channel
   end
   
   def status=(status)
