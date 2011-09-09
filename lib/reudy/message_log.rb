@@ -51,29 +51,22 @@ class MessageLog
   #発言を追加
   def addMsg(fromNick, body, toOuter = true)
     File.open(@innerFileName,"a") do |f|
-      f.print YAML.dump({:fromNick => fromNick, :body => body})
+      YAML.dump({:fromNick => fromNick, :body => body}, f)
     end
     @size += 1
-    @observers.each do |observer|
-      observer.onAddMsg
-    end
+    @observers.each {|observer| observer.onAddMsg }
   end
  
   private
   
   #内部データをクリア(デフォルトのログのみ残す)
   def clear
-    default = ""
-    File.open(@innerFileName) do |f|
-      f.each_line("\n---") do |s|
-        new_data << s if YAML.load(s)[:fromNick] == "Default"
-      end
-    end
-    File.open(@innerFileName,"w") do |f|
-      f.puts default
-    end
-    File.open(@innerFileName) do |f|
-      @size = f.readlines("\n---").size
+    File.open(@innerFileName, "w") do |f|
+      default = f.lines("\n---").select{|s| YAML.load(s)[:fromNick] == "Default" }
+      f.rewind
+      f.puts default.join
+      f.truncate(f.size)
+      @size = default.size
     end
   end
 end

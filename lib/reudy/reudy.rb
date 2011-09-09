@@ -322,15 +322,6 @@ class Reudy
   #base内の既知単語をnewWordsで置換したものを返す。
   #toForceがfalseの場合、短すぎる文章になってしまった場合はnilを返す。
   def replaceWords(base, newWords, toForce)a
-=begin
-    base = base.dup
-    p newWords
-    @wordSet.each do |word|
-      break if newWords.empty?
-      base.gsub!(Regexp.new(Regexp.escape(word.str)),newWords.delete_at(rand(newWords.size)).str) if base.include?(word.str)
-    end
-    return base
-=end
     #baseを単語の前後で分割してpartsにする。
     parts = [base]
     @wordSet.each do |word|
@@ -348,7 +339,6 @@ class Reudy
         parts = newParts
       end
     end
-    p parts
     #先頭から2番目以降の単語の直前でカットしたりしなかったり。
     parts_size = parts.size
     wordCt =  (parts_size-1) / 2

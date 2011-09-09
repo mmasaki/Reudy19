@@ -79,3 +79,39 @@
 ---
 :fromNick: ! '!'
 :body: hi
+---
+:fromNick: Glass_saga
+:body: hhi
+---
+:fromNick: ! '!'
+:body: hhi
+---
+:fromNick: Glass_saga
+:body: やあ。
+---
+:fromNick: ! '!'
+:body: こんにちは。
+---
+:fromNick: Glass_saga
+:body: hi
+---
+:fromNick: ! '!'
+:body: どうもー
+---
+:fromNick: Glass_saga
+:body: いえー
+---
+:fromNick: ! '!'
+:body: exit
+---
+:fromNick: Glass_saga
+:body: hi
+---
+:fromNick: ! '!'
+:body: こんにちは。
+---
+:fromNick: Glass_saga
+:body: どうも。
+---
+:fromNick: ! '!'
+:body: hi
