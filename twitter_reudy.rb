@@ -1,9 +1,10 @@
+#encoding: utf-8
 #Copyright (C) 2011 Glass_saga <glass.saga@gmail.com>
 
 $REUDY_DIR= "./lib/reudy" unless defined?($REUDY_DIR)
 
 CONSUMER = { #get it in http://twitter.com/oauth_client/new
-      :key => "Key",
+      :key => "key",
       :secret => "secret"
       }
 
@@ -61,7 +62,7 @@ module Gimite
     def speak(s)
       time = Time.now
       if time - @last_tweet > 60
-        @r.update("テスト:#{s}")
+        @r.update(s)
         puts "tweeted: #{s}"
         @last_tweet = time
       end

@@ -87,7 +87,7 @@ class WordExtractor
   # 単語として適切かどうか判定する
   # 前後の文字列も参考にする
   # 不適だとnilを返す
-  def checkWordCand(word, prestr='', poststr='')
+  def checkWordCand(word, prestr="", poststr="")
     unless  ((prestr.empty? || prestr =~ /[、。．，！？（）・…]$/) && poststr =~ /^[はが]([^ぁ-ん]|$)/ \
             &&((word + poststr[0..0]) !~ /(?:では|だが|には|のが)$/) && (word =~ /^[ぁ-んー]+$/ || word =~ /^[^ぁ-ん]/) \
             && word.size >= 3) \
