@@ -8,6 +8,8 @@ CONSUMER = { #get it in http://twitter.com/oauth_client/new
       :secret => "secret"
       }
 
+Interval = 60 # タイムラインを取得する間隔
+
 trap(:INT){ exit }
 
 require 'optparse'
@@ -97,9 +99,13 @@ module Gimite
         puts "#{status.user.screen_name}: #{status.text}"
         client.onTweet(status)
       end
-      sleep(60)
+      sleep(Interval)
     rescue => ex
-      puts ex.message
+      if ex.message == "Could not authenticate with OAuth." || ex.message.include?("Rate limit exceeded.")
+        abort ex.message
+      else
+        puts ex.message
+      end
     end
   end
 end
