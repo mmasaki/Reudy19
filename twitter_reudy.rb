@@ -3,18 +3,20 @@
 
 $REUDY_DIR= "./lib/reudy" unless defined?($REUDY_DIR)
 
-CONSUMER = { #get it in http://twitter.com/oauth_client/new
+Consumer = {
       :key => "key",
       :secret => "secret"
       }
 
 Interval = 60 # タイムラインを取得する間隔
+Abort_on_API_limit = false # API制限に引っかかった時にabortするかどうか
 
 trap(:INT){ exit }
 
 require 'optparse'
 require 'rubytter'
 require 'highline'
+require 'time'
 require $REUDY_DIR+'/bot_irc_client'
 require $REUDY_DIR+'/reudy'
 require $REUDY_DIR+'/reudy_common'
@@ -29,7 +31,7 @@ module Gimite
       @user.client = self
       @last_tweet = Time.now
       
-      cons = OAuth::Consumer.new(CONSUMER[:key],CONSUMER[:secret], :site => "http://api.twitter.com")
+      cons = OAuth::Consumer.new(Consumer[:key],Consumer[:secret], :site => "http://api.twitter.com")
   
       unless File.exist?(File.dirname(__FILE__)+"/token")
         request_token = cons.get_request_token
@@ -63,7 +65,7 @@ module Gimite
     #発言する
     def speak(s)
       time = Time.now
-      if time - @last_tweet > 60
+      if time - @last_tweet > Interval
         @r.update(s)
         puts "tweeted: #{s}"
         @last_tweet = time
@@ -101,8 +103,18 @@ module Gimite
       end
       sleep(Interval)
     rescue => ex
-      if ex.message == "Could not authenticate with OAuth." || ex.message.include?("Rate limit exceeded.")
+      case ex.message
+      when "Could not authenticate with OAuth."
         abort ex.message
+      when /Rate limit exceeded./
+        if Abort_on_API_limit
+          abort ex.message
+        else
+          reset_time = Time.parse(r.limit_status[:reset_time])
+          puts ex.message
+          puts "API制限は#{reset_time}に解除されます。"
+          sleep(reset_time - Time.now)
+        end
       else
         puts ex.message
       end
