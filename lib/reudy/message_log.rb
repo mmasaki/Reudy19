@@ -2,7 +2,7 @@
 #Modified by Glass_saga <glass.saga@gmail.com>
 
 require $REUDY_DIR+'/reudy_common'
-require 'psych' #UTF-8をバイナリで書き出さないようにする
+require "psych" #UTF-8をバイナリで書き出さないようにする
 require "yaml"
 
 module Gimite
@@ -39,7 +39,8 @@ module Gimite
     def [](n)
       n += @size if n < 0 #末尾からのインデックス
       File.open(@innerFileName) do |f|
-        if line = f.lines("\n---").find{ f.lineno > n }
+        line = f.lines("\n---").find{ f.lineno > n }
+        if line && line != "\n---"
           m = YAML.load(line)
           return Message.new(m[:fromNick], m[:body])
         else
@@ -50,7 +51,7 @@ module Gimite
     
     #発言を追加
     def addMsg(fromNick, body, toOuter = true)
-      File.open(@innerFileName,"a") do |f|
+      File.open(@innerFileName, "a") do |f|
         YAML.dump({:fromNick => fromNick, :body => body}, f)
       end
       @size += 1

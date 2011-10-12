@@ -168,7 +168,8 @@ module Gimite
         @wordAdoptBorder = 0
         return
       end
-      msgCts.sort!{|i| -i } #逆順ソート
+      msgCts.sort!
+      msgCts.reverse!
       @wordAdoptBorder = msgCts[msgCts.size / 50]
     end
     
@@ -226,13 +227,13 @@ module Gimite
       assocWords = @newInputWords.map{ |w| @associator.associate(w.str) }
       assocWords.compact!
       assocWords.map!{ |s| Word.new(s) }
-      @newInputWords += assocWords
+      @newInputWords.concat(assocWords)
       #入力語の更新
       unless @newInputWords.empty?
         if rand(5).nonzero?
           @inputWords = @newInputWords
         else
-          @inputWords += @newInputWords
+          @inputWords.concat(@newInputWords)
         end
       end
     end
@@ -316,21 +317,21 @@ module Gimite
     #msgN番の発言を使ったベース発言の文字列。
     def getBaseMsgStr(msgN)
       str = @log[msgN].body
-      str = $1 if str =~ /^(.*)[＜＞]/o && $1.size >= str.size / 2 #文の後半に[＜＞]が有れば、その後ろはカット。a
+      str.replace($1) if str =~ /^(.*)[＜＞]/ && $1.size >= str.size / 2 #文の後半に[＜＞]が有れば、その後ろはカット。a
       return str
     end
     
     #base内の既知単語をnewWordsで置換したものを返す。
     #toForceがfalseの場合、短すぎる文章になってしまった場合はnilを返す。
-    def replaceWords(base, newWords, toForce)a
+    def replaceWords(base, newWords, toForce)
       #baseを単語の前後で分割してpartsにする。
       parts = [base]
       @wordSet.each do |word|
-        if @wordSearcher.hasWord(base, word) #&& canAdoptWord(word)
+        if @wordSearcher.hasWord(base, word) && canAdoptWord(word)
           newParts = []
           parts.each_with_index do |part,i|
             if (i % 2).zero?
-              while part =~ /^(.*?)#{Regexp.escape(word.str)}(.*)$/o
+              while part =~ /^(.*?)#{Regexp.escape(word.str)}(.*)$/
                 newParts.push($1, word.str)
                 part = $2
               end
@@ -367,12 +368,12 @@ module Gimite
       #閉じ括弧が残った場合に開き括弧を補う。
       #入れ子になってたりしたら知らない。
       case output
-      when /^[^「」]*」/o
-        output = "「#{output}"
-      when /^[^（）]*）/o
-        output = "（#{output}"
-      when /^[^()]*\)/o
-        output = "(#{output}"
+      when /^[^「」]*」/
+        output.replace("「#{output}")
+      when /^[^（）]*）/
+        output.replace("（#{output}")
+      when /^[^()]*\)/
+        output.replace("(#{output}")
       end
       return output
     end
@@ -450,36 +451,36 @@ module Gimite
     #入力が定型コマンドであれば応答メッセージを返す。
     #そうでなければnilを返す。ただし、終了コマンドだったら:exitを返す。
     def processCommand(input)
-      if input =~ /設定を更新/o
+      if input =~ /設定を更新/
         loadSettings
         return "設定を更新しました。"
       end
       return nil if @settings[:disable_commands] #コマンドが禁止されている場合
       case input
-      when /黙れ|黙りなさい|黙ってろ|沈黙モード/o
+      when /黙れ|黙りなさい|黙ってろ|沈黙モード/
         return changeMode(0) ? "沈黙モードに切り替える。" : ""
-      when /寡黙モード/o
+      when /寡黙モード/
         return changeMode(1) ? "寡黙モードに切り替える。" : ""
-      when /通常モード/o
+      when /通常モード/
         return changeMode(2) ? "通常モードに切り替える。" : ""
-      when /饒舌モード/o
+      when /饒舌モード/
         return changeMode(3) ? "饒舌モードに切り替える。" : ""
-      when /休んで良いよ|終了しなさい/o
+      when /休んで良いよ|終了しなさい/
         save
         @client.exit
         return :exit
-      when /([\x21-\x7e]+)の(?:もの|モノ|物)(?:まね|真似)/o #半角文字を抽出する正規表現
+      when /([\x21-\x7e]+)の(?:もの|モノ|物)(?:まね|真似)/ #半角文字を抽出する正規表現
         begin
           @targetNickReg = Regexp.new($1, Regexp::IGNORECASE)
           return "#{$1}のものまねを開始する。"
         rescue RegexpError
           return "正規表現が間違っている。"
         end
-      when /(?:もの|モノ|物)(?:まね|真似).*(?:解除|中止|終了|やめろ|やめて)/o
+      when /(?:もの|モノ|物)(?:まね|真似).*(?:解除|中止|終了|やめろ|やめて)/
         @targetNickReg = /(?!)/
         return "物まねを解除する。"
       end
-      if input =~ /覚えさせた|教わった/o && input =~ /誰/o && input =~ /「(.+?)」/o
+      if input =~ /覚えさせた|教わった/ && input.include?("誰") && input =~ /「(.+?)」/
         wordStr = $1
         if wordIdx = @wordSet.words.index(Word.new(wordStr))
           author = @wordSet.words[wordIdx].author
