@@ -42,7 +42,7 @@ module Gimite
       @filename = filename
       @added_words = []
       File.open(filename, File::RDONLY|File::CREAT) do |f|
-        @words = [] unless @words = YAML.load(f)
+        @words = YAML.load(f) || []
       end
     end
   

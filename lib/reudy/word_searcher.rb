@@ -19,13 +19,13 @@ module Gimite
     def hasWord(sentence, word)
       return false unless sentence.include?(word.str) 
       return false unless sentence =~ /(.|^)#{Regexp.escape(word.str)}(.|$)/
-      return false if ($1.to_s+word.str[0]) =~ KANA_AN || (word.str[-1]+$2.to_s) =~ KANA_AN #カタカナ列や英文字列を途中で切るような単語は不可
+      return false if ("#{$1}#{word.str[0]}") =~ KANA_AN || ("#{word.str[-1]}#{$2}") =~ KANA_AN #カタカナ列や英文字列を途中で切るような単語は不可
       return true
     end
     
     #文中から既知の単語を探す
     def searchWords(sentence)
-      @wordSet.select{|word| hasWord(sentence, word) }
+      @wordSet.words.select{|word| hasWord(sentence, word) }
     end
   end
 end

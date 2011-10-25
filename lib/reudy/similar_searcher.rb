@@ -64,7 +64,7 @@ module Gimite
     
     #発言が追加された。
     def onAddMsg
-      recordTail(@log.size-1)
+      recordTail(-1)
     end
     
     #ログがクリアされた。

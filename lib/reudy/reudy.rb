@@ -163,7 +163,7 @@ module Gimite
     #単語がこれより多く出現してたら置換などの対象にしない、という
     #ボーダを求めて@wordAdoptBorderに代入。
     def setWordAdoptBorder
-      msgCts = @wordSet.map{ |w| w.mids.size }
+      msgCts = @wordSet.words.map{|w| w.mids.size }
       if msgCts.empty?
         @wordAdoptBorder = 0
         return
@@ -217,7 +217,9 @@ module Gimite
     
     #入力文章から既知単語を拾う。
     def pickUpInputWords(input)
-      @newInputWords = @wordSearcher.searchWords(replaceMyNicks(input, " ")).select{ |w| canAdoptWord(w) } #入力に含まれる単語を列挙
+      input = replaceMyNicks(input, " ")
+      p @wordAdoptBorder
+      @newInputWords = @wordSearcher.searchWords(input).select{ |w| canAdoptWord(w) } #入力に含まれる単語を列挙
       #入力に単語が無い場合は、時々入力語をランダムに変更
       if @newInputWords.empty? && rand(50).zero?
         word = @wordSet.words.sample
@@ -514,7 +516,7 @@ module Gimite
     
     #ログに発言が追加された。
     def onAddMsg
-      msg = @log[@log.size-1]
+      msg = @log[-1]
       @fromNick = msg.fromNick unless msg.fromNick == "!"
       @extractor.processLine(msg.body) unless @settings[:teacher_mode] #中の人モードでは、単語の抽出は別にやる。
       #@extractor以外のオブジェクトは自力で@logを監視しているので、

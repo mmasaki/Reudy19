@@ -5,7 +5,7 @@ module Gimite
   #デバッグ出力
   def dprint(caption, *objs)
     objs.map!{|obj| obj.inspect }
-    warn("caption : #{objs.join("/")}")
+    warn("#{caption}: #{objs.join("/")}")
   end
   
   #contの全ての要素に対してpredが真を返すか。

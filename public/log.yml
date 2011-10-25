@@ -19,9 +19,3 @@
 ---
 :body: なんでやねん。
 :fromNick: Default
----
-:fromNick: test
-:body: hi
----
-:fromNick: ! '!'
-:body: 不確定だ。
