@@ -164,6 +164,7 @@ module Gimite
     #ボーダを求めて@wordAdoptBorderに代入。
     def setWordAdoptBorder
       msgCts = @wordSet.words.map{|w| w.mids.size }
+      p msgCts
       if msgCts.empty?
         @wordAdoptBorder = 0
         return
@@ -328,7 +329,7 @@ module Gimite
     def replaceWords(base, newWords, toForce)
       #baseを単語の前後で分割してpartsにする。
       parts = [base]
-      @wordSet.each do |word|
+      @wordSet.words.each do |word|
         if @wordSearcher.hasWord(base, word) && canAdoptWord(word)
           newParts = []
           parts.each_with_index do |part,i|

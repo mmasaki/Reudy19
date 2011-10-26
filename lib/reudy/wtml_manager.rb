@@ -23,7 +23,7 @@ module Gimite
     end
     
     def onClearLog
-      @wordSet.each do |word|
+      @wordSet.words.each do |word|
         word.mids.clear
       end
     end
