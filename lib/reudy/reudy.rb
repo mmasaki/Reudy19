@@ -164,7 +164,6 @@ module Gimite
     #ボーダを求めて@wordAdoptBorderに代入。
     def setWordAdoptBorder
       msgCts = @wordSet.words.map{|w| w.mids.size }
-      p msgCts
       if msgCts.empty?
         @wordAdoptBorder = 0
         return
