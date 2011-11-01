@@ -29,9 +29,12 @@ module Gimite
     #debugが真なら、デバッグ出力をする。
     def responseTo(mid, debug = false)
       return [nil,0] unless mid
+      mid += @log.size if mid < 0
+      p mid, @cache
+      return @cache[mid] if @cache[mid] #&& @msgFilter.call(@cache[mid].first) #キャッシュにヒット。
+      p "no hit"
+ 
       numTargets = 5
-      return @cache[mid] if @cache[mid] && @msgFilter.call(@cache[mid].first) #キャッシュにヒット。
-      
       candMids = (mid+1..mid+numTargets).select{ |n| @msgFilter.call(n) }
       return [nil, 0] if candMids.empty?
       #この先の判定は重いので、先に「絶対nilになるケース」を除外。

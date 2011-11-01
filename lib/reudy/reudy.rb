@@ -163,14 +163,14 @@ module Gimite
     #単語がこれより多く出現してたら置換などの対象にしない、という
     #ボーダを求めて@wordAdoptBorderに代入。
     def setWordAdoptBorder
-      msgCts = @wordSet.words.map{|w| w.mids.size }
-      if msgCts.empty?
+      if @wordSet.words.empty?
         @wordAdoptBorder = 0
-        return
+      else
+        msgCts = @wordSet.words.map{|w| w.mids.size }
+        msgCts.sort!
+        msgCts.reverse!
+        @wordAdoptBorder = msgCts[msgCts.size / 50]
       end
-      msgCts.sort!
-      msgCts.reverse!
-      @wordAdoptBorder = msgCts[msgCts.size / 50]
     end
     
     #その単語が置換などの対象になるか
@@ -180,12 +180,14 @@ module Gimite
     
     #発言をベース発言として使用可能か。
     def isUsableBaseMsg(msgN)
-      return false if msgN >= size = @log.size #存在しない発言。
-      return false unless msg = @log[msgN] #空行。削除された発言など。
+      size = @log.size
+      return false if msgN >= size #存在しない発言。
+      msg = @log[msgN]
+      return false unless msg #空行。削除された発言など。
       return false if !@settings[:teacher_mode] && size > @recentUnusedCt && msgN >= size - @recentUnusedCt #発言が新しすぎる。（中の人モードでは無効）
       nick = msg.fromNick
       return false if nick == "!" #自分自身の発言。
-      return false if !nick =~ @targetNickReg || nick =~ @forbiddenNickReg #この発言者の発言は使えない。
+      return false if !(nick =~ @targetNickReg) || nick =~ @forbiddenNickReg #この発言者の発言は使えない。
       return false if @recentBaseMsgNs.include?(msgN) #最近そのベース発言を使った。
       return true
     end
@@ -218,7 +220,6 @@ module Gimite
     #入力文章から既知単語を拾う。
     def pickUpInputWords(input)
       input = replaceMyNicks(input, " ")
-      p @wordAdoptBorder
       @newInputWords = @wordSearcher.searchWords(input).select{ |w| canAdoptWord(w) } #入力に含まれる単語を列挙
       #入力に単語が無い場合は、時々入力語をランダムに変更
       if @newInputWords.empty? && rand(50).zero?
@@ -301,7 +302,8 @@ module Gimite
       maxProb = 0
       i = 0
       @simSearcher.eachSimilarMsg(sentence) do |mid|
-        (resMid, prob) = responseTo(mid, true)
+        resMid, prob = responseTo(mid, true)
+        p resMid, prob
         if resMid
           if prob > maxProb
             maxMid = mid
@@ -389,8 +391,7 @@ module Gimite
     def speakFreely(fromNick, origInput, mustRespond)
       input = replaceMyNicks(origInput, " ")
       output = nil
-      simMsgN, baseMsgN = getBaseMsgUsingSimilarity(input)
-      #まず、類似性を使ってベース発言を求める。
+      simMsgN, baseMsgN = getBaseMsgUsingSimilarity(input) #まず、類似性を使ってベース発言を求める。
       if !@newInputWords.empty?
         if baseMsgN 
           output = replaceWords(getBaseMsgStr(baseMsgN), @inputWords, mustRespond)
