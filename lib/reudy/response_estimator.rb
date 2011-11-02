@@ -29,7 +29,6 @@ module Gimite
     #debugが真なら、デバッグ出力をする。
     def responseTo(mid, debug = false)
       return [nil, 0] unless mid
-      p "minus" if mid < 0
       mid += @log.size if mid < 0
       return @cache[mid] if @cache[mid] && @msgFilter.call(@cache[mid].first) #キャッシュにヒット。
 
