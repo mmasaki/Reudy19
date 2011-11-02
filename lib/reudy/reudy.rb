@@ -280,7 +280,7 @@ module Gimite
       maxProb = 0
       i = 0
       eachMsgContainingWords(inputWords) do |mid|
-        (resMid, prob) = responseTo(mid, true)
+        resMid, prob = responseTo(mid, true)
         if resMid
           if prob > maxProb
             maxMid = mid
@@ -303,7 +303,6 @@ module Gimite
       i = 0
       @simSearcher.eachSimilarMsg(sentence) do |mid|
         resMid, prob = responseTo(mid, true)
-        p resMid, prob
         if resMid
           if prob > maxProb
             maxMid = mid
@@ -321,7 +320,7 @@ module Gimite
     #msgN番の発言を使ったベース発言の文字列。
     def getBaseMsgStr(msgN)
       str = @log[msgN].body
-      str.replace($1) if str =~ /^(.*)[＜＞]/ && $1.size >= str.size / 2 #文の後半に[＜＞]が有れば、その後ろはカット。a
+      str.replace($1) if str =~ /^(.*)[＜＞]/ && $1.size >= str.size / 2 #文の後半に[＜＞]が有れば、その後ろはカット。
       return str
     end
     

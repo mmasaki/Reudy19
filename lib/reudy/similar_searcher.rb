@@ -33,7 +33,7 @@ module Gimite
       require $REUDY_DIR+"/#{db}"
       @log = log
       @log.addObserver(self)
-      @compLen = 3 #比較対象の文尾の長さ
+      @compLen = 6 #比較対象の文尾の長さ
       makeDictionary(fileName)
     end
     
@@ -54,11 +54,11 @@ module Gimite
     end
     
     #contの各要素について、ランダムな順序でblockを呼び出す。
-    def randomEach(cont, &block)
-      return unless cont
-      cont = cont.dup
-      cont.size.downto(1) do |i|
-        block.call(cont.delete_at(rand(i)))
+    def randomEach(cont)
+      if cont
+        cont.shuffle.each do |c|
+          yield(c)
+        end
       end
     end
     
@@ -107,6 +107,7 @@ module Gimite
     
     #@tailMapに追加。
     def addToTailMap(tail, lineN)
+      lineN += @log.size if lineN < 0
       if @tailMap[tail]
         @tailMap[tail] << lineN
       else

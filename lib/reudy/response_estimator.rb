@@ -28,19 +28,18 @@ module Gimite
     #該当するものが無ければ[nil,0]を返す。
     #debugが真なら、デバッグ出力をする。
     def responseTo(mid, debug = false)
-      return [nil,0] unless mid
+      return [nil, 0] unless mid
+      p "minus" if mid < 0
       mid += @log.size if mid < 0
-      p mid, @cache
-      return @cache[mid] if @cache[mid] #&& @msgFilter.call(@cache[mid].first) #キャッシュにヒット。
-      p "no hit"
- 
+      return @cache[mid] if @cache[mid] && @msgFilter.call(@cache[mid].first) #キャッシュにヒット。
+
       numTargets = 5
       candMids = (mid+1..mid+numTargets).select{ |n| @msgFilter.call(n) }
       return [nil, 0] if candMids.empty?
       #この先の判定は重いので、先に「絶対nilになるケース」を除外。
       words = @wordSearcher.searchWords(@log[mid].body).select{ |w| @wordFilter.call(w) }
       resMid = nil
-      
+ 
       #その発言からnumTargets行以内で、同じ単語を含むものが有れば、それを返事とみなす。
       #無ければ、直後の発言を返事とする。
       words.each do |word|
@@ -62,7 +61,7 @@ module Gimite
       #キャッシュしておく。
       @cache.clear if @cache.size >= @cacheLimit
       @cache[mid] = [resMid, prob]
-      
+     
       return [resMid, prob]
     end 
   end
