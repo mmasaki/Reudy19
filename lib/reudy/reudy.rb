@@ -12,6 +12,7 @@ require $REUDY_DIR+'/attention_decider'
 require $REUDY_DIR+'/response_estimator'
 require $REUDY_DIR+'/reudy_common'
 require 'yaml'
+require 'objspace'
 
 unless Encoding.default_external == __ENCODING__
   STDOUT.set_encoding(Encoding.default_external, __ENCODING__)
@@ -183,7 +184,7 @@ module Gimite
       size = @log.size
       return false if msgN >= size #存在しない発言。
       msg = @log[msgN]
-      return false unless msg #空行。削除された発言など。
+      return unless msg #空行。削除された発言など。
       return false if !@settings[:teacher_mode] && size > @recentUnusedCt && msgN >= size - @recentUnusedCt #発言が新しすぎる。（中の人モードでは無効）
       nick = msg.fromNick
       return false if nick == "!" #自分自身の発言。
@@ -330,6 +331,7 @@ module Gimite
       #baseを単語の前後で分割してpartsにする。
       parts = [base]
       @wordSet.words.each do |word|
+        next if word.str.empty?
         if @wordSearcher.hasWord(base, word) && canAdoptWord(word)
           newParts = []
           parts.each_with_index do |part,i|
