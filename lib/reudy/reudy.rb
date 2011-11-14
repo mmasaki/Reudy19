@@ -12,7 +12,6 @@ require $REUDY_DIR+'/attention_decider'
 require $REUDY_DIR+'/response_estimator'
 require $REUDY_DIR+'/reudy_common'
 require 'yaml'
-require 'objspace'
 
 unless Encoding.default_external == __ENCODING__
   STDOUT.set_encoding(Encoding.default_external, __ENCODING__)
