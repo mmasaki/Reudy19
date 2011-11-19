@@ -12,7 +12,6 @@ require $REUDY_DIR+'/attention_decider'
 require $REUDY_DIR+'/response_estimator'
 require $REUDY_DIR+'/reudy_common'
 require 'yaml'
-require 'objspace'
 
 unless Encoding.default_external == __ENCODING__
   STDOUT.set_encoding(Encoding.default_external, __ENCODING__)
@@ -118,7 +117,7 @@ module Gimite
             :min     => 0.001, \
             :max     => 0.001, \
             :default => 0.001, \
-            :CALled  => 0.001, \
+            :called  => 0.001, \
             :self    => 0.0,   \
             :ignored => 0.0    \
           }
@@ -318,8 +317,8 @@ module Gimite
     #msgN番の発言を使ったベース発言の文字列。
     def getBaseMsgStr(msgN)
       str = @log[msgN].body
-      #str.replace($1) if str =~ /^(.*)[＜＞]/ && $1.size >= str.size / 2 #文の後半に[＜＞]が有れば、その後ろはカット。
-      #return str
+      str.replace($1) if str =~ /^(.*)[＜＞]/ && $1.size >= str.size / 2 #文の後半に[＜＞]が有れば、その後ろはカット。
+      str
     end
     
     #base内の既知単語をnewWordsで置換したものを返す。

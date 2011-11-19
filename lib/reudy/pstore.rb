@@ -8,7 +8,6 @@ module Gimite
     end
     
     def [](key)
-      @db.instance_eval{ p @table }
       @db.transaction do
         return @db[key]
       end
@@ -21,22 +20,16 @@ module Gimite
     end
     
     def keys
-      @db.transaction do
-        return @db.roots
-      end
+      @db.transaction { @db.roots }
     end
     
     def empty?
-      @db.transaction do
-        return @db.roots.empty?
-      end
+      @db.transaction { @db.roots.empty? }
     end
     
     def clear
       @db.transaction do
-        @db.roots.each do |key|
-          @db.delete(key)
-        end
+        @db.roots.each {|key| @db.delete(key) }
       end
     end
     
