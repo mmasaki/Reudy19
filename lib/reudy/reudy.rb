@@ -12,6 +12,7 @@ require $REUDY_DIR+'/attention_decider'
 require $REUDY_DIR+'/response_estimator'
 require $REUDY_DIR+'/reudy_common'
 require 'yaml'
+require 'objspace'
 
 unless Encoding.default_external == __ENCODING__
   STDOUT.set_encoding(Encoding.default_external, __ENCODING__)
@@ -117,7 +118,7 @@ module Gimite
             :min     => 0.001, \
             :max     => 0.001, \
             :default => 0.001, \
-            :called  => 0.001, \
+            :CALled  => 0.001, \
             :self    => 0.0,   \
             :ignored => 0.0    \
           }
@@ -262,13 +263,10 @@ module Gimite
     #inputWords中の単語を含む各発言について、ブロックを繰り返す。
     #ブロックは発言番号を引数に取る。
     #発言の順序はランダム。
-    def eachMsgContainingWords(inputWords, &block)
-      words = inputWords.dup
-      words.size.downto(1) do |i|
-        word = words.delete_at(rand(i))
-        mids = word.mids.dup
-        mids.size.downto(1) do |j|
-          block.call(mids.delete_at(rand(j)))
+    def eachMsgContainingWords(input_words)
+      input_words.shuffle.each do |word|
+        word.mids.shuffle.each do |mid|
+          yield(mid)
         end
       end
     end
@@ -320,8 +318,8 @@ module Gimite
     #msgN番の発言を使ったベース発言の文字列。
     def getBaseMsgStr(msgN)
       str = @log[msgN].body
-      str.replace($1) if str =~ /^(.*)[＜＞]/ && $1.size >= str.size / 2 #文の後半に[＜＞]が有れば、その後ろはカット。
-      return str
+      #str.replace($1) if str =~ /^(.*)[＜＞]/ && $1.size >= str.size / 2 #文の後半に[＜＞]が有れば、その後ろはカット。
+      #return str
     end
     
     #base内の既知単語をnewWordsで置換したものを返す。
@@ -555,19 +553,19 @@ module Gimite
     end
   
     #他人が発言した。
-    def onOtherSpeak(fromNick, input, shouldIgnore = false)
+    def onOtherSpeak(from_nick, input, should_ignore = false)
       output = nil #発言。
-      isCalled = there_exists?(@myNicks){ |n| input.include?(n) }
-      output = processCommand(input) if isCalled
+      called = @myNicks.any?{|n| input.include?(n) }
+      output = called ? processCommand(input) : nil
       if output
         @client.speak(output) if output != :exit && !output.empty?
       else #定型コマンドではない。
         @lastSpeach = input
-        studyMsg(fromNick, input)
+        studyMsg(from_nick, input)
         pickUpInputWords(input)
-        prob = @attention.onOtherSpeak(fromNick, input, isCalled)
+        prob = @attention.onOtherSpeak(from_nick, input, called)
         dprint("発言率", prob, @attention.to_s) #発言率を求める。
-        speakFreely(fromNick, input, prob > 1.0) if (!shouldIgnore && rand < prob) || prob > 1.0 #自由発話。
+        speakFreely(from_nick, input, prob > 1.0) if (!should_ignore && rand < prob) || prob > 1.0 #自由発話。
       end
     end
     

@@ -97,8 +97,10 @@ module Gimite
     
   loop do
     begin
-      client.r.friends_timeline.each do |status|
+      since_id = -1
+      client.r.friends_timeline(since_id: since_id).each do |status|
         puts "#{status.user.screen_name}: #{status.text}"
+        since_id = status.id
         client.onTweet(status)
       end
       sleep(Interval)

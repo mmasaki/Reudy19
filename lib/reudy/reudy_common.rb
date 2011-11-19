@@ -9,21 +9,21 @@ module Gimite
   end
   
   #contの全ての要素に対してpredが真を返すか。
-  def for_all?(cont, &pred)
-    cont.all?{|item| pred.call(item) }
+  def for_all?(cont)
+    cont.all?{|item| yield(item) }
   end
   
   #contの中にpredが真を返す要素が存在するか。
-  def there_exists?(cont, &pred)
-    cont.any?{|item| pred.call(item) }
+  def there_exists?(cont)
+    cont.any?{|item| yield(item) }
   end
   
-  def sigma(range, &block)
+  def sigma(range)
     sum = nil
     range.each do |v|
-      sum = sum ? (sum+block.call(v)) : block.call(v)
+      sum = sum ? sum + yield(v) : yield(v)
     end
-    return sum
+    sum
   end
   
   module_function(:dprint, :for_all?, :there_exists?, :sigma)

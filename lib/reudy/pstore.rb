@@ -8,6 +8,7 @@ module Gimite
     end
     
     def [](key)
+      @db.instance_eval{ p @table }
       @db.transaction do
         return @db[key]
       end

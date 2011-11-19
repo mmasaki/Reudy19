@@ -109,7 +109,7 @@ module Gimite
     def addToTailMap(tail, lineN)
       lineN += @log.size if lineN < 0
       if @tailMap[tail]
-        @tailMap[tail] << lineN
+        @tailMap[tail] += [lineN]
       else
         @tailMap[tail] = [lineN]
       end
