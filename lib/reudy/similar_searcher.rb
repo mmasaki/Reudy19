@@ -30,7 +30,7 @@ module Gimite
     include Gimite
     
     def initialize(fileName, log, db)
-      require $REUDY_DIR+"/#{db}"
+      require "#{$REUDY_DIR}/#{db}"
       @log = log
       @log.addObserver(self)
       @compLen = 6 #比較対象の文尾の長さ
@@ -40,12 +40,11 @@ module Gimite
     #inputに類似する各発言に対して、発言番号を引数にblockを呼ぶ。発言の順序は微妙にランダム。
     def eachSimilarMsg(input, &block)
       ws = normalizeMsg(input)
-      ws_size = ws.size
-      return if ws_size <= 1
-      if ws_size >= @compLen
-        wtail = ws[-@compLen..-1]#文尾。
+      return if ws.size <= 1
+      if ws.size >= @compLen
+        wtail = ws[-@compLen..-1] #文尾。
         randomEach(@tailMap[wtail], &block)
-        0.upto(@compLen-1) do |i|
+        0.upto(@compLen.pred) do |i|
           randomEach(@tailMap[wtail[0...i] + wtail[i+1..-1] ], &block) #途中を1文字抜かしたもの。
         end
       else
@@ -91,27 +90,28 @@ module Gimite
     end
     
     #lineN番の発言の文尾を記録。
-    def recordTail(lineN)
-      ws = normalizeMsg(@log[lineN].body)
+    def recordTail(line_n)
+      ws = normalizeMsg(@log[line_n].body)
       return nil if ws.size <= 1
       if ws.size >= @compLen
         wtail = ws[-@compLen..-1] #文尾。
-        addToTailMap(wtail, lineN)
-        0.upto(@compLen-1) do |i|
-          addToTailMap(wtail[0...i]+wtail[i+1..-1], lineN) #途中を1文字抜かしたもの。
+        addToTailMap(wtail, line_n)
+        0.upto(@compLen.pred) do |i|
+          addToTailMap(wtail[0...i]+wtail[i+1..-1], line_n) #途中を1文字抜かしたもの。
         end
       else
-        addToTailMap(ws, lineN)
+        addToTailMap(ws, line_n)
       end
     end
     
     #@tailMapに追加。
-    def addToTailMap(tail, lineN)
-      lineN += @log.size if lineN < 0
+    def addToTailMap(tail, line_n)
+      line_n += @log.size if line_n < 0
+      return if line_n < 0
       if @tailMap[tail]
-        @tailMap[tail] += [lineN]
+        @tailMap[tail] += [line_n]
       else
-        @tailMap[tail] = [lineN]
+        @tailMap[tail] = [line_n]
       end
     end
     
@@ -121,7 +121,7 @@ module Gimite
       s.gsub!(/？/, "?")
       s.gsub!(/！/,"!")
       s.gsub!(/[ー−+]/, "ー")
-      return s
+      s
     end
   end
   

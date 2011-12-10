@@ -24,23 +24,23 @@ module Gimite
       @calledProb = probs[:called] #名前を呼ばれた時の発言率の下限。
       @selfProb = probs[:self] #普段の自己発言の発言率。
       @ignoredProb = probs[:ignored] #無視された後の自己発言の発言率。
-      @probRange = @maxProb-@minProb
+      @probRange = @maxProb - @minProb
     end
     
     #他人が発言した時にこれを呼ぶ。
     #発言率を返す。
-    def onOtherSpeak(fromNick, sentence, isCalled)
-      updateRecentSpeakers(fromNick)
+    def onOtherSpeak(from_nick, sentence, called)
+      updateRecentSpeakers(from_nick)
   
       #今回の発言率を求める。
-      if isCalled || recentOtherSpeakers.size == 1
+      if called || recentOtherSpeakers.size == 1
         prob = @calledProb
       else
         prob = @prob
       end
       
       #発言率を更新。
-      if isCalled
+      if called
         raiseProbability(1.0) #呼ばれたら、発言率を最高に。
       else
         raiseProbability(-0.2) #それ以外のケースでは、発言率は徐々に下がる。
@@ -60,17 +60,17 @@ module Gimite
       puts self
       if @lastNick == "!"
         raiseProbability(-0.2)
-        return @ignoredProb
+        @ignoredProb
       elsif recentOtherSpeakers.size == 1
-        return @calledProb
+        @calledProb
       else
-        return @selfProb
+        @selfProb
       end
     end
     
     #現在の状態を表す文字列。
     def to_s
-      "デフォルト発言率:%.2f, 最近の発言者: %p" % [@prob, @recentSpeakers]
+      "デフォルト発言率:%.2f, 最近の発言者: #{@recentSpeakers}" % @prob
     end
     
     private

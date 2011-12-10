@@ -90,6 +90,7 @@ module Gimite
         @forbiddenNickReg = /(?!)/o #何にもマッチしない正規表現
       end
       @myNicks = @settings[:nicks] #これにマッチするNickの発言は、ベース発言として使用不能
+      @my_nicks_regexp = Regexp.new(@myNicks.map{|n| Regexp.escape(n) }.join("|"))
       changeMode(@settings[:default_mode].to_i) #デフォルトのモードに変更
     end
     
@@ -214,7 +215,7 @@ module Gimite
     
     #sentence中の自分のNickをtargetに置き換える。
     def replaceMyNicks(sentence, target)
-      sentence.gsub( Regexp.new(@myNicks.map{ |n| Regexp.escape(n) }.join("|"))){ target }
+      sentence.gsub(@my_nicks_regexp, target)
     end
     
     #入力文章から既知単語を拾う。
@@ -224,17 +225,17 @@ module Gimite
       #入力に単語が無い場合は、時々入力語をランダムに変更
       if @newInputWords.empty? && rand(50).zero?
         word = @wordSet.words.sample
-        @newInputWords = [word] if canAdoptWord(word)
+        @newInputWords.push(word) if canAdoptWord(word)
       end
       #連想される単語を追加
-      assocWords = @newInputWords.map{ |w| @associator.associate(w.str) }
-      assocWords.compact!
-      assocWords.map!{ |s| Word.new(s) }
-      @newInputWords.concat(assocWords)
+      assoc_words = @newInputWords.map{|w| @associator.associate(w.str) }
+      assoc_words.compact!
+      assoc_words.map!{|s| Word.new(s) }
+      @newInputWords.concat(assoc_words)
       #入力語の更新
       unless @newInputWords.empty?
         if rand(5).nonzero?
-          @inputWords = @newInputWords
+          @inputWords.replace(@newInputWords)
         else
           @inputWords.concat(@newInputWords)
         end
@@ -315,15 +316,15 @@ module Gimite
     end
     
     #msgN番の発言を使ったベース発言の文字列。
-    def getBaseMsgStr(msgN)
-      str = @log[msgN].body
+    def getBaseMsgStr(msg_n)
+      str = @log[msg_n].body
       str.replace($1) if str =~ /^(.*)[＜＞]/ && $1.size >= str.size / 2 #文の後半に[＜＞]が有れば、その後ろはカット。
       str
     end
     
     #base内の既知単語をnewWordsで置換したものを返す。
     #toForceがfalseの場合、短すぎる文章になってしまった場合はnilを返す。
-    def replaceWords(base, newWords, toForce)
+    def replaceWords(base, new_words, toForce)
       #baseを単語の前後で分割してpartsにする。
       parts = [base]
       @wordSet.words.each do |word|
@@ -332,7 +333,8 @@ module Gimite
           newParts = []
           parts.each_with_index do |part,i|
             if (i % 2).zero?
-              while part =~ /^(.*?)#{Regexp.escape(word.str)}(.*)$/
+              word_regexp = /^(.*?)#{Regexp.escape(word.str)}(.*)$/
+              while part =~ word_regexp
                 newParts.push($1, word.str)
                 part = $2
               end
@@ -343,27 +345,23 @@ module Gimite
         end
       end
       #先頭から2番目以降の単語の直前でカットしたりしなかったり。
-      parts_size = parts.size
-      wordCt =  (parts_size-1) / 2
-      if parts_size > 1
+      wordCt =  (parts.size-1) / 2
+      if parts.size > 1
         cutPos = rand(wordCt) * 2 + 1
-        parts = [""] + parts[cutPos..-1] if cutPos > 1
+        parts.replace(parts[cutPos..-1].unshift("")) if cutPos > 1
       end
       #単語を除いた文章が短すぎるものはある確率で却下。
-      if wordCt.nonzero? && !toForce && !shouldAdoptSaying(sigma(0...parts.size){ |i| (i % 2).zero? ? parts[i].size : 0 })
+      if wordCt.nonzero? && !toForce && !shouldAdoptSaying(sigma(0...parts.size){|i| (i % 2).zero? ? parts[i].size : 0 })
         return nil
       end
       #単語を置換。
-      unless newWords.empty?
-        newWords = newWords.dup
-        newWords.size.downto(1) do |i|
-          oldWordStr = parts[rand(wordCt)*2+1]
-          newWordStr = newWords.delete_at(rand(i)).str
-          0.upto(wordCt-1) do |j|
-            parts[j*2+1] = newWordStr if parts[j*2+1] == oldWordStr
-          end
-          break if rand < 0.5
+      new_words.shuffle.each do |new_word|
+        new_word_str = new_word.str
+        old_word_str = parts[rand(wordCt)*2+1]
+        0.upto(wordCt-1) do |j|
+          parts[j*2+1] = new_word_str if parts[j*2+1] == old_word_str
         end
+        break if rand < 0.5
       end
       output = parts.join
       #閉じ括弧が残った場合に開き括弧を補う。
@@ -571,7 +569,7 @@ module Gimite
     #制御発言（infoでの発言）があった。
     def onControlMsg(str)
       return if @settings[:disable_studying] || !@settings[:teacher_mode]
-      if str =~ /^(.+)→→(.+)$/o
+      if str =~ /^(.+)→→(.+)$/
         input = $1
         output = $2
       else
