@@ -55,7 +55,7 @@ module Gimite
         YAML.dump({:fromNick => fromNick, :body => body}, f)
       end
       @size += 1
-      @observers.each {|observer| observer.onAddMsg }
+      @observers.each(&:onAddMsg)
     end
    
     private
