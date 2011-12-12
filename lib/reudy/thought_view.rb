@@ -13,7 +13,7 @@ module Gimite
       line.chomp!
       fields = line.split(/\t/)
       r = OpenStruct.new
-      (r.input_mid, r.pattern, r.sim_mid, r.res_mid) = fields[0...4].map{ |s| s.to_i }
+      (r.input_mid, r.pattern, r.sim_mid, r.res_mid) = fields[0...4].map(&:to_i)
       (r.words_str, r.output) = fields[4...6]
       r.input = log[r.input_mid].body
       r.messages = []
@@ -31,6 +31,6 @@ module Gimite
   
   extend(ERB::Util)
   
-  template = File.open("thought_view.html"){|f| f.read }
+  template = File.open("thought_view.html").read
   ERB.new(template).run(binding)
 end

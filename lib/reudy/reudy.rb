@@ -78,9 +78,7 @@ module Gimite
       File.open(@settingPath) do |file|
         @settings = YAML.load(file)
       end
-      @fixedSettings.each do |key, val|
-        @settings[key] = val
-      end
+      @settings = @fixedSettings.dup
       #メンバ変数を更新
       @targetNickReg = Regexp.new(@settings[:target_nick] || "", Regexp::IGNORECASE)
       #これにマッチしないNickの発言は、ベース発言として使用不能

@@ -146,7 +146,7 @@ class WordExtractor
         j.clear
       end
     end
-    wordcand.reject!{|word| word.empty? }
+    wordcand.reject!(&:empty?)
     return wordcand
   end
 

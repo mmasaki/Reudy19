@@ -4,7 +4,7 @@
 module Gimite
   #デバッグ出力
   def dprint(caption, *objs)
-    objs.map!{|obj| obj.inspect }
+    objs.map!(&:inspect)
     warn("#{caption}: #{objs.join("/")}")
   end
   

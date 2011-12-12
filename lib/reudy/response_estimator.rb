@@ -71,7 +71,7 @@ module Gimite
     wordSet = WordSet.new(dir+"/words.dat")
     wordSearcher = WordSearcher.new(wordSet)
     resEst = ResponseEstimator.new(log, wordSearcher)
-    ARGV[1..-1].map{ |s| s.to_i }.each do |mid|
+    ARGV[1..-1].map(&:to_i).each do |mid|
       printf("[%d]%s:\n", mid, log[mid].body)
       resMid, prob= resEst.responseTo(mid, true)
       printf("  [%d]%s (%d)\n", resMid, log[resMid].body, prob) if resMid
