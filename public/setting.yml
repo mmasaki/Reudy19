@@ -40,3 +40,6 @@
 :wait_before_info: 0.2
 :name: Reudy1.9
 :real_name: Bot Reudy
+:twitter:
+  :key: "consumer key"
+  :secret: "consumer secret"

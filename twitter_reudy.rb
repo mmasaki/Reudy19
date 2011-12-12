@@ -3,11 +3,6 @@
 
 $REUDY_DIR= "./lib/reudy" unless defined?($REUDY_DIR)
 
-Consumer = {
-      :key => "key",
-      :secret => "secret"
-      }
-
 Interval = 60 # タイムラインを取得する間隔
 Abort_on_API_limit = false # API制限に引っかかった時にabortするかどうか
 
@@ -30,8 +25,10 @@ module Gimite
       @user = user
       @user.client = self
       @last_tweet = Time.now
-      
-      cons = OAuth::Consumer.new(Consumer[:key],Consumer[:secret], :site => "http://api.twitter.com")
+
+      key = user.settings[:twitter][:key]
+      secret = user.settings[:twitter][:secret]
+      cons = OAuth::Consumer.new(key, secret, :site => "http://api.twitter.com")
   
       unless File.exist?(File.dirname(__FILE__)+"/token")
         request_token = cons.get_request_token
