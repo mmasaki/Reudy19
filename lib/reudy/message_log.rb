@@ -8,8 +8,8 @@ require "yaml"
 module Gimite
   #個々の発言
   class Message
-    def initialize(fromNick, body)
-      @fromNick = fromNick
+    def initialize(from_nick, body)
+      @fromNick = from_nick
       @body = body
     end
   
@@ -20,10 +20,10 @@ module Gimite
   class MessageLog
     include Gimite
     
-    def initialize(innerFileName)
-      @innerFileName = innerFileName
+    def initialize(inner_filename)
+      @innerFileName = inner_filename
       @observers = []
-      File.open(innerFileName) do |f|
+      File.open(inner_filename) do |f|
         @size = f.readlines("\n---").size
       end
     end
@@ -50,9 +50,9 @@ module Gimite
     end
     
     #発言を追加
-    def addMsg(fromNick, body, toOuter = true)
+    def addMsg(from_nick, body, to_outer = true)
       File.open(@innerFileName, "a") do |f|
-        YAML.dump({:fromNick => fromNick, :body => body}, f)
+        YAML.dump({:fromNick => from_nick, :body => body}, f)
       end
       @size += 1
       @observers.each(&:onAddMsg)
