@@ -24,6 +24,7 @@ module Gimite
   opt.on('-m','--mecab') { |v| mecab = true }
   
   opt.parse!(ARGV)
+  directory = ARGV.first unless ARGV.empty?
   
   begin
     #IRC用ロイディを作成
