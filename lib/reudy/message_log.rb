@@ -24,7 +24,7 @@ module Gimite
       @innerFileName = inner_filename
       @observers = []
       File.open(inner_filename) do |f|
-        @size = f.readlines("\n---").size
+        @size = f.lines("\n---").count
       end
     end
   
