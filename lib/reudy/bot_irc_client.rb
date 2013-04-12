@@ -47,7 +47,7 @@ module Gimite
           receiveThread = Thread.new{ receiveProcess }
           #受信ループ。
           while line = sock.gets
-            on_recv(line)
+            on_recv(line.force_encoding(@user.settings[:encoding] || "ISO-2022-JP"))
             time = Time.now
             if time - @prevTime >= SILENT_SECOND
               @prevTime = time
